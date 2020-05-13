@@ -61,6 +61,7 @@ public final class PropertyUtils {
     return constArgsMap;
   }
 
+  @SuppressWarnings("unchecked")
   public static String toString(String key, Map<String, Object> map) {
     StringBuilder sb = new StringBuilder();
     for (String mapKey : map.keySet()) {
@@ -88,6 +89,7 @@ public final class PropertyUtils {
     return argsMap;
   }
 
+  @SuppressWarnings("unchecked")
   public static TreeMap<String, Map<String, Object>> yaml(String location) {
     if (!location.startsWith("/")) {
       location = "/" + location;
