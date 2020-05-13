@@ -184,7 +184,7 @@ public final class Apex {
   public <T> void start(Class<T> bootCls, String[] mainArgs) {
     requireNonNull(bootCls, "Apex needs to specify the startup class when starting.");
 
-    Optional.of(options).orElseGet(this::buildOptions);
+    Optional.ofNullable(options).orElseGet(this::buildOptions);
 
     this.bootCls = bootCls;
     this.scanPath = bootCls.getPackageName();
