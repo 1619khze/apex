@@ -23,9 +23,10 @@
  */
 package org.apex;
 
-import java.util.Collection;
+import io.github.classgraph.ScanResult;
 
-@FunctionalInterface
-public interface BeanResolver {
-  void resolve(Collection<Class<?>> cls);
+import java.util.Map;
+
+public interface BeanResolver{
+  Map<String, BeanDefinition> resolve(ScanResult scanResult);
 }

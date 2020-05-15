@@ -27,36 +27,18 @@ import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.Arrays;
-import java.util.Objects;
+import java.util.List;
 
 public final class BeanDefinition implements Serializable {
   private String name;
   private String simpleName;
   private Long classSize;
   private Class<?>[] implInterfaces;
-  private Class<?>[] extendsClass;
+  private Class<?> extendsClass;
   private Field[] fields;
   private Method[] methods;
-  private Method[] initMethod;
-
-  public BeanDefinition() {
-  }
-
-  public BeanDefinition(
-          String name, String simpleName,
-          Long classSize, Class<?>[] implInterfaces,
-          Class<?>[] extendsClass,
-          Field[] fields, Method[] methods,
-          Method[] initMethod) {
-    this.name = name;
-    this.simpleName = simpleName;
-    this.classSize = classSize;
-    this.implInterfaces = implInterfaces;
-    this.extendsClass = extendsClass;
-    this.fields = fields;
-    this.methods = methods;
-    this.initMethod = initMethod;
-  }
+  private List<Method> initMethod;
+  private Object instants;
 
   public String getName() {
     return name;
@@ -90,11 +72,11 @@ public final class BeanDefinition implements Serializable {
     this.implInterfaces = implInterfaces;
   }
 
-  public Class<?>[] getExtendsClass() {
+  public Class<?> getExtendsClass() {
     return extendsClass;
   }
 
-  public void setExtendsClass(Class<?>[] extendsClass) {
+  public void setExtendsClass(Class<?> extendsClass) {
     this.extendsClass = extendsClass;
   }
 
@@ -114,37 +96,34 @@ public final class BeanDefinition implements Serializable {
     this.methods = methods;
   }
 
-  public Method[] getInitMethod() {
+  public List<Method> getInitMethod() {
     return initMethod;
   }
 
-  public void setInitMethod(Method[] initMethod) {
+  public void setInitMethod(List<Method> initMethod) {
     this.initMethod = initMethod;
   }
 
-  @Override
-  public boolean equals(Object o) {
-    if (this == o) return true;
-    if (o == null || getClass() != o.getClass()) return false;
-    BeanDefinition that = (BeanDefinition) o;
-    return classSize.equals(that.classSize) &&
-            Objects.equals(name, that.name) &&
-            Objects.equals(simpleName, that.simpleName) &&
-            Arrays.equals(implInterfaces, that.implInterfaces) &&
-            Arrays.equals(extendsClass, that.extendsClass) &&
-            Arrays.equals(fields, that.fields) &&
-            Arrays.equals(methods, that.methods) &&
-            Arrays.equals(initMethod, that.initMethod);
+  public Object getInstants() {
+    return instants;
+  }
+
+  public void setInstants(Object instants) {
+    this.instants = instants;
   }
 
   @Override
-  public int hashCode() {
-    int result = Objects.hash(name, simpleName, classSize);
-    result = 31 * result + Arrays.hashCode(implInterfaces);
-    result = 31 * result + Arrays.hashCode(extendsClass);
-    result = 31 * result + Arrays.hashCode(fields);
-    result = 31 * result + Arrays.hashCode(methods);
-    result = 31 * result + Arrays.hashCode(initMethod);
-    return result;
+  public String toString() {
+    return "BeanDefinition{" +
+            "name='" + name + '\'' +
+            ", simpleName='" + simpleName + '\'' +
+            ", classSize=" + classSize +
+            ", implInterfaces=" + Arrays.toString(implInterfaces) +
+            ", extendsClass=" + extendsClass +
+            ", fields=" + Arrays.toString(fields) +
+            ", methods=" + Arrays.toString(methods) +
+            ", initMethod=" + initMethod +
+            ", instants=" + instants +
+            '}';
   }
 }

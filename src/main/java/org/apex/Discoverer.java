@@ -23,9 +23,9 @@
  */
 package org.apex;
 
-import java.util.Set;
+import io.github.classgraph.ScanResult;
 
 @FunctionalInterface
 public interface Discoverer {
-  Set<Class<?>> discover(String scanPath);
+  ScanResult discover(String scanPath);
 }

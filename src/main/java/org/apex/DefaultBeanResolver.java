@@ -23,16 +23,145 @@
  */
 package org.apex;
 
+import io.github.classgraph.ClassInfoList;
+import io.github.classgraph.ScanResult;
+import org.apex.annotation.Component;
+import org.apex.annotation.Configuration;
+import org.apex.annotation.PostConstruct;
+import org.apex.annotation.Service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Collection;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.ObjectOutputStream;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
 
 public class DefaultBeanResolver implements BeanResolver {
   private static final Logger log = LoggerFactory.getLogger(DefaultBeanResolver.class);
 
-  @Override
-  public void resolve(Collection<Class<?>> cls) {
+  private final Map<String, BeanDefinition> beanDefinitionMap = new ConcurrentHashMap<>(64);
+  private final List<String> beanDefinitionNames = new ArrayList<>(64);
 
+  private final List<String> annotationNames = new ArrayList<>();
+
+  public List<String> getAnnotationNames() {
+    annotationNames.add(Component.class.getName());
+    annotationNames.add(Configuration.class.getName());
+    annotationNames.add(Service.class.getName());
+    return annotationNames;
+  }
+
+  private Function<String, ClassInfoList> getClassSetFunction(ScanResult scanResult) {
+    return scanResult::getClassesWithAnnotation;
+  }
+
+  @Override
+  public Map<String, BeanDefinition> resolve(ScanResult scanResult) {
+    Objects.requireNonNull(scanResult, "The scanned class collection cannot be null");
+    long startMs = System.currentTimeMillis();
+    if (scanResult.getAllClasses().isEmpty()) {
+      return beanDefinitionMap;
+    }
+
+    log.info("Candidate selection is completed and encapsulated as Bean Definition after being instantiated");
+
+    final List<Class<?>> candidates = new ArrayList<>();
+    this.getAnnotationNames().stream()
+            .map(getClassSetFunction(scanResult))
+            .forEach(classInfos -> candidates.addAll(classInfos.loadClasses()));
+
+    Map<Object, Class<?>> objectClassMap = this.filterCandidates(candidates, startMs);
+    if (objectClassMap.isEmpty()) {
+      return beanDefinitionMap;
+    }
+
+    for (Map.Entry<Object, Class<?>> entry : objectClassMap.entrySet()) {
+      BeanDefinition beanDefinition = this.buildBeanDefinition(entry);
+      if (log.isDebugEnabled()) {
+        log.debug("The beans that have completed the " +
+                "Bean Definition construction are:{}", beanDefinition.getName());
+      }
+      this.beanDefinitionMap.put(beanDefinition.getName(), beanDefinition);
+    }
+
+    long completeTime = (System.currentTimeMillis() - startMs);
+    log.info("The process of encapsulating the scanned class into Bean " +
+            "Definition has been completed，Time consuming：{}ms", completeTime);
+    return beanDefinitionMap;
+  }
+
+  private List<Method> getInitMethod(Method[] declaredMethods) {
+    List<Method> initMethods = new ArrayList<>();
+    Arrays.stream(declaredMethods)
+            .filter(this::isInitMethod)
+            .forEach(initMethods::add);
+    return initMethods;
+  }
+
+  private boolean isInitMethod(Method method) {
+    return !Objects.isNull(method.getAnnotation(PostConstruct.class));
+  }
+
+  private long sizeOf(Object instants) {
+    try (ByteArrayOutputStream byteArrayOps =
+                 new ByteArrayOutputStream();
+         ObjectOutputStream objectOps =
+                 new ObjectOutputStream(byteArrayOps);) {
+      objectOps.writeObject(instants);
+      return byteArrayOps.size();
+    } catch (IOException e) {
+      log.error("An exception occurred while " +
+              "calculating the size of the object bytes", e);
+      return 0;
+    }
+  }
+
+  private BeanDefinition buildBeanDefinition(Map.Entry<Object, Class<?>> entry) {
+    final Object instants = entry.getKey();
+    final Class<?> clazz = entry.getValue();
+    BeanDefinition beanDefinition = new BeanDefinition();
+    beanDefinition.setName(clazz.getName());
+    beanDefinition.setSimpleName(clazz.getSimpleName());
+    beanDefinition.setInstants(instants);
+    beanDefinition.setClassSize(sizeOf(instants));
+    beanDefinition.setFields(clazz.getDeclaredFields());
+    beanDefinition.setMethods(clazz.getDeclaredMethods());
+    beanDefinition.setInitMethod(getInitMethod(clazz.getDeclaredMethods()));
+    beanDefinition.setExtendsClass(clazz.getSuperclass());
+    beanDefinition.setImplInterfaces(clazz.getInterfaces());
+    return beanDefinition;
+  }
+
+  private Map<Object, Class<?>> filterCandidates(List<Class<?>> collection, long startMs) {
+    Map<Object, Class<?>> candidates = new HashMap<>();
+    Iterator<Class<?>> iterator = collection.iterator();
+    try {
+      while (iterator.hasNext()) {
+        Class<?> next = iterator.next();
+        int modifiers = next.getModifiers();
+        if (next.isAnnotation() || next.isEnum() || Modifier.isAbstract(modifiers)) {
+          iterator.remove();
+          continue;
+        }
+        if (log.isDebugEnabled()) {
+          log.debug("Classes that currently meet " +
+                  "the registration requirements:{}", next.getSimpleName());
+        }
+        Object instance = next.getConstructor().newInstance();
+        candidates.put(Objects.requireNonNull(instance), next);
+        this.beanDefinitionNames.add(next.getName());
+      }
+    } catch (ReflectiveOperationException e) {
+      log.error("An exception occurred while instantiating the object", e);
+    }
+    long completeTime = (System.currentTimeMillis() - startMs);
+    log.info("The bean scan is complete time consuming: {}ms", completeTime);
+    log.info("A total of {} eligible and registerable beans were scanned", candidates.size());
+    return Objects.requireNonNull(candidates);
   }
 }

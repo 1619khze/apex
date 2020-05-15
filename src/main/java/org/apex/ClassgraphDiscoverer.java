@@ -24,12 +24,11 @@
 package org.apex;
 
 import io.github.classgraph.ClassGraph;
+import io.github.classgraph.ScanResult;
 
 import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.Objects;
 import java.util.Set;
-import java.util.concurrent.CopyOnWriteArraySet;
 
 public final class ClassgraphDiscoverer implements Discoverer {
 
@@ -42,7 +41,7 @@ public final class ClassgraphDiscoverer implements Discoverer {
   }
 
   @Override
-  public Set<Class<?>> discover(String scanPackageName) {
+  public ScanResult discover(String scanPackageName) {
     this.classGraph.enableAllInfo();
     if (classgraphOptions != null) {
       this.scanPackages(classgraphOptions.getScanPackages(), scanPackageName)
@@ -50,8 +49,7 @@ public final class ClassgraphDiscoverer implements Discoverer {
               .verbose(classgraphOptions.isVerbose())
               .enableRealtimeLogging(classgraphOptions.isEnableRealtimeLogging());
     }
-    List<Class<?>> classes = this.classGraph.scan().getAllClasses().loadClasses();
-    return new CopyOnWriteArraySet<>(classes);
+    return this.classGraph.scan();
   }
 
   /**
