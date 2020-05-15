@@ -23,23 +23,33 @@
  */
 package org.apex;
 
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.logging.Logger;
 
-public abstract class AbstractFactory implements ApexFactory {
+public abstract class AbstractApexFactory implements ApexFactory {
+  private static final Logger log = Logger.getLogger(AbstractApexFactory.class.getName());
 
-  protected static final Logger log = Logger.getLogger(AbstractFactory.class.getName());
+  private final Map<String, BeanDefinition> beanPool;
+  private final ReentrantReadWriteLock readWriteLock;
 
-  protected final Map<String, BeanDefinition> beanPool = new ConcurrentHashMap<>(64);
-  protected final ReentrantReadWriteLock readWriteLock = new ReentrantReadWriteLock();
+  public AbstractApexFactory() {
+    this.beanPool = new ConcurrentHashMap<>(64);
+    this.readWriteLock = new ReentrantReadWriteLock();
+  }
 
-  protected ReentrantReadWriteLock.ReadLock readLock() {
+  private ReentrantReadWriteLock.ReadLock readLock() {
     return this.readWriteLock.readLock();
   }
 
-  protected ReentrantReadWriteLock.WriteLock writeLock() {
+  private ReentrantReadWriteLock.WriteLock writeLock() {
     return this.readWriteLock.writeLock();
+  }
+
+  @Override
+  public <T> List<Class<T>> getBeanByType(Class<T> cls) {
+    return null;
   }
 }
