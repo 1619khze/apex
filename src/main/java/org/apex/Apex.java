@@ -62,7 +62,8 @@ public final class Apex {
   private Class<?> bootCls;
   private String[] mainArgs;
 
-  private Apex() {}
+  private Apex() {
+  }
 
   /** Ensures that the argument expression is true. */
   static void requireArgument(boolean expression, String template, Object... args) {
@@ -234,10 +235,12 @@ public final class Apex {
    */
   private Runnable performScan() {
     return () -> {
-      if (Objects.isNull(discoverer)) this.discoverer = new ClassgraphDiscoverer(options);
-      Set<Class<?>> discover = this.discoverer.discover(scanPath);
-      Optional.of(beanResolver).orElseGet(DefaultBeanResolver::new);
-      this.beanResolver.resolve(discover);
+      if (Objects.isNull(discoverer)) {
+        this.discoverer = new ClassgraphDiscoverer(options);
+      }
+      this.beanResolver = Optional.ofNullable(this.beanResolver)
+              .orElseGet(DefaultBeanResolver::new);
+      this.beanResolver.resolve(this.discoverer.discover(scanPath));
     };
   }
 
@@ -290,7 +293,7 @@ public final class Apex {
    * load properties and yaml
    *
    * @param bootConfEnv Environment
-   * @param constField Map<String, String> constField
+   * @param constField  Map<String, String> constField
    */
   private void loadPropsOrYaml(Environment bootConfEnv, Map<String, String> constField) {
     /** Properties are configured by default, and the
