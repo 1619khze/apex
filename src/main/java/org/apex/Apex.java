@@ -238,9 +238,8 @@ public final class Apex {
       if (Objects.isNull(discoverer)) {
         this.discoverer = new ClassgraphDiscoverer(options);
       }
-      this.beanResolver = Optional.ofNullable(this.beanResolver)
-              .orElseGet(DefaultBeanResolver::new);
-      this.beanResolver.resolve(this.discoverer.discover(scanPath));
+      Optional.ofNullable(this.beanResolver).orElseGet(DefaultBeanResolver::new)
+              .resolve(this.discoverer.discover(scanPath));
     };
   }
 
