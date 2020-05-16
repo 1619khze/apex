@@ -38,7 +38,9 @@ import java.io.ObjectOutputStream;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Consumer;
 import java.util.function.Function;
 
 public class DefaultBeanResolver implements BeanResolver {
@@ -56,49 +58,59 @@ public class DefaultBeanResolver implements BeanResolver {
     return annotationNames;
   }
 
-  private Function<String, ClassInfoList> getClassSetFunction(ScanResult scanResult) {
-    return scanResult::getClassesWithAnnotation;
-  }
-
   @Override
   public Map<String, BeanDefinition> resolve(ScanResult scanResult) {
-    Objects.requireNonNull(scanResult, "The scanned class collection cannot be null");
     long startMs = System.currentTimeMillis();
-    if (scanResult.getAllClasses().isEmpty()) {
+
+    if (null == scanResult || scanResult.getAllClasses().isEmpty()) {
+      log.info("No candidates were found in the scan");
       return beanDefinitionMap;
     }
-
-    log.info("Candidate selection is completed and encapsulated as Bean Definition after being instantiated");
 
     final List<Class<?>> candidates = new ArrayList<>();
     this.getAnnotationNames().stream()
-            .map(getClassSetFunction(scanResult))
-            .forEach(classInfos -> candidates.addAll(classInfos.loadClasses()));
+            .map(getResultSet(scanResult))
+            .forEach(getClassInfoList(candidates));
 
-    Map<Object, Class<?>> objectClassMap = this.filterCandidates(candidates, startMs);
-    if (objectClassMap.isEmpty()) {
-      return beanDefinitionMap;
-    }
+    CompletableFuture<List<Class<?>>> future = CompletableFuture.completedFuture(candidates);
+    future.thenApply(candidate -> this.filterCandidates(candidate, startMs))
+            .thenAccept(this::registerBeanDefinition);
 
-    for (Map.Entry<Object, Class<?>> entry : objectClassMap.entrySet()) {
-      BeanDefinition beanDefinition = this.buildBeanDefinition(entry);
-      if (log.isDebugEnabled()) {
-        log.debug("The beans that have completed the " +
-                "Bean Definition construction are:{}", beanDefinition.getName());
-      }
-      this.beanDefinitionMap.put(beanDefinition.getName(), beanDefinition);
-    }
+    scanResult.close();
+    future.complete(candidates);
 
     long completeTime = (System.currentTimeMillis() - startMs);
-    log.info("The process of encapsulating the scanned class into Bean " +
-            "Definition has been completed，Time consuming：{}ms", completeTime);
+    if (beanDefinitionMap.isEmpty()) {
+      log.info("No suitable candidates were found in this scan");
+    } else {
+      log.info("The process of encapsulating the scanned class into Bean " +
+              "Definition has been completed，Time consuming：{}ms", completeTime);
+    }
     return beanDefinitionMap;
+  }
+
+  private Function<String, ClassInfoList> getResultSet(ScanResult scanResult) {
+    return scanResult::getClassesWithAnnotation;
+  }
+
+  private Consumer<ClassInfoList> getClassInfoList(List<Class<?>> candidates) {
+    return classInfos -> candidates.addAll(classInfos.loadClasses());
+  }
+
+  private void registerBeanDefinition(Map<Object, Class<?>> candidateMap) {
+    if (candidateMap.isEmpty()) return;
+    for (Map.Entry<Object, Class<?>> entry : candidateMap.entrySet()) {
+      BeanDefinition beanDefinition = this.buildBeanDefinition(entry);
+      if (log.isDebugEnabled())
+        log.debug("The beans that have completed the " +
+                "Bean Definition construction are:{}", beanDefinition.getName());
+      this.beanDefinitionMap.put(beanDefinition.getName(), beanDefinition);
+    }
   }
 
   private List<Method> getInitMethod(Method[] declaredMethods) {
     List<Method> initMethods = new ArrayList<>();
-    Arrays.stream(declaredMethods)
-            .filter(this::isInitMethod)
+    Arrays.stream(declaredMethods).filter(this::isInitMethod)
             .forEach(initMethods::add);
     return initMethods;
   }
@@ -162,6 +174,7 @@ public class DefaultBeanResolver implements BeanResolver {
     long completeTime = (System.currentTimeMillis() - startMs);
     log.info("The bean scan is complete time consuming: {}ms", completeTime);
     log.info("A total of {} eligible and registerable beans were scanned", candidates.size());
+    log.info("Candidate selection is completed and encapsulated as Bean Definition after being instantiated");
     return Objects.requireNonNull(candidates);
   }
 }
