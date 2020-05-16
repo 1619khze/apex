@@ -234,13 +234,9 @@ public final class Apex {
    * @return Runnable
    */
   private Runnable performScan() {
-    return () -> {
-      if (Objects.isNull(discoverer)) {
-        this.discoverer = new ClassgraphDiscoverer(options);
-      }
-      Optional.ofNullable(this.beanResolver).orElseGet(DefaultBeanResolver::new)
-              .resolve(this.discoverer.discover(scanPath));
-    };
+    return () -> Optional.ofNullable(this.beanResolver)
+            .orElseGet(DefaultBeanResolver::new).resolve(Optional.ofNullable(discoverer)
+                    .orElseGet(() -> new ClassgraphDiscoverer(options)).discover(scanPath));
   }
 
   /**
