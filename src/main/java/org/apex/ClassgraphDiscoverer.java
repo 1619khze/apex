@@ -29,13 +29,18 @@ import io.github.classgraph.ScanResult;
 import java.util.LinkedHashSet;
 import java.util.Objects;
 import java.util.Set;
+import java.util.function.Supplier;
 
 public final class ClassgraphDiscoverer implements Discoverer {
 
   private final Options classgraphOptions;
   private final ClassGraph classGraph;
 
-  public ClassgraphDiscoverer(Options classgraphOptions) {
+  public static Supplier<? extends Discoverer> of(Options classgraphOptions){
+    return () -> new ClassgraphDiscoverer(classgraphOptions);
+  }
+
+  private ClassgraphDiscoverer(Options classgraphOptions) {
     this.classgraphOptions = classgraphOptions;
     this.classGraph = new ClassGraph();
   }
