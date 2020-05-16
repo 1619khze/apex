@@ -184,13 +184,9 @@ public final class Apex {
 
   public <T> void start(Class<T> bootCls, String[] mainArgs) {
     requireNonNull(bootCls, "Apex needs to specify the startup class when starting.");
-
-    Optional.ofNullable(options).orElseGet(this::buildOptions);
-
-    this.bootCls = bootCls;
-    this.scanPath = bootCls.getPackageName();
-
     try {
+      this.bootCls = bootCls;
+      this.scanPath = bootCls.getPackageName();
       this.loadConfig(mainArgs);
       this.singleExecutor();
     } catch (IllegalAccessException e) {
@@ -234,6 +230,7 @@ public final class Apex {
    * @return Runnable
    */
   private Runnable performScan() {
+    this.options = Optional.ofNullable(this.options).orElseGet(this::buildOptions);
     return () -> Optional.ofNullable(this.beanResolver)
             .orElseGet(DefaultBeanResolver::new).resolve(Optional.ofNullable(discoverer)
                     .orElseGet(ClassgraphDiscoverer.of(options)).discover(scanPath));
