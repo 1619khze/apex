@@ -9,7 +9,7 @@
     <version>1.0-SNAPSHOT</version>
 
     <properties>
-        <java.version>11</java.version>
+        <java.version>1.8</java.version>
         <classgraph.version>4.8.37</classgraph.version>
         <checkframework.version>3.3.0</checkframework.version>
         <oshi.version>4.6.1</oshi.version>
@@ -17,6 +17,7 @@
         <snakeyaml.version>1.24</snakeyaml.version>
         <logback.version>1.2.3</logback.version>
         <byte-buddy.version>1.10.10</byte-buddy.version>
+        <jsr330.version>1</jsr330.version>
         <maven-license-plugin.version>1.9.0</maven-license-plugin.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
@@ -57,6 +58,11 @@
             <groupId>net.bytebuddy</groupId>
             <artifactId>byte-buddy</artifactId>
             <version>${byte-buddy.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>javax.inject</groupId>
+            <artifactId>javax.inject</artifactId>
+            <version>${jsr330.version}</version>
         </dependency>
     </dependencies>
 
