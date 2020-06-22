@@ -30,7 +30,6 @@ import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Field;
 import java.net.URL;
-import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 import static com.sun.jna.Platform.isWindows;
@@ -125,6 +124,6 @@ public final class PropertyUtils {
   }
 
   private static String decode(String path) throws UnsupportedEncodingException {
-    return java.net.URLDecoder.decode(path, StandardCharsets.UTF_8);
+    return java.net.URLDecoder.decode(path, "utf-8");
   }
 }
