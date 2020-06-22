@@ -96,7 +96,9 @@
                         <include>**/src/main/resources/*.yml</include>
                         <include>**/src/test/resources/*.yml</include>
                     </includes>
-
+                    <excludes>
+                        <exclude>**/src/main/java/org/apex/base/UnsafeAccess.java</exclude>
+                    </excludes>
                     <useDefaultExcludes>true</useDefaultExcludes>
                     <mapping>
                         <java>SLASHSTAR_STYLE</java>
