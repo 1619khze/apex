@@ -26,30 +26,73 @@ package org.apex;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
-import java.util.logging.Logger;
 
-public abstract class AbstractApexFactory implements ApexFactory {
-  private static final Logger log = Logger.getLogger(AbstractApexFactory.class.getName());
+/**
+ * @author WangYi
+ * @since 2020/6/22
+ */
+public class AbstractApexFactory implements ApexFactory {
+  protected final Map<String, BeanDefinition> beanDefinitions = new ConcurrentHashMap<>(64);
+  protected final Map<String, Object> instanceMapping = new ConcurrentHashMap<>();
 
-  private final Map<String, BeanDefinition> beanPool;
-  private final ReentrantReadWriteLock readWriteLock;
-
-  public AbstractApexFactory() {
-    this.beanPool = new ConcurrentHashMap<>(64);
-    this.readWriteLock = new ReentrantReadWriteLock();
+  @Override
+  public <T> T getBean(Class<T> cls) {
+    return null;
   }
 
-  private ReentrantReadWriteLock.ReadLock readLock() {
-    return this.readWriteLock.readLock();
+  @SuppressWarnings("unchecked")
+  @Override
+  public <T> T getBean(String beanName) {
+    return ((T) instanceMapping.get(beanName));
   }
 
-  private ReentrantReadWriteLock.WriteLock writeLock() {
-    return this.readWriteLock.writeLock();
+  @Override
+  public <T> T getBean(Object obj) {
+    return null;
+  }
+
+  @Override
+  public <T> T addBean(Class<T> cls) {
+    return null;
+  }
+
+  @Override
+  public <T> T addBean(String beanName) {
+    return null;
+  }
+
+  @Override
+  public <T> T addBean(Object obj) {
+    return null;
   }
 
   @Override
   public <T> List<Class<T>> getBeanByType(Class<T> cls) {
     return null;
+  }
+
+  @Override
+  public <T> List<Class<T>> getBeanByType(Object obj) {
+    return null;
+  }
+
+  @Override
+  public <T> void removeAll(Class<T> cls) {
+
+  }
+
+  @Override
+  public void removeAll() {
+
+  }
+
+  @Override
+  public void removeAll(Object obj) {
+
+  }
+
+  @Override
+  public void removeBean(String beanName) {
+
   }
 }

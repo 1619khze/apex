@@ -26,21 +26,18 @@ package org.apex;
 import io.github.classgraph.ClassGraph;
 import io.github.classgraph.ScanResult;
 
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.LinkedHashSet;
 import java.util.Objects;
 import java.util.Set;
-import java.util.function.Supplier;
 
 public final class ClassgraphDiscoverer implements Discoverer {
 
   private final Options classgraphOptions;
   private final ClassGraph classGraph;
 
-  public static Supplier<? extends Discoverer> of(Options classgraphOptions){
-    return () -> new ClassgraphDiscoverer(classgraphOptions);
-  }
-
-  private ClassgraphDiscoverer(Options classgraphOptions) {
+  public ClassgraphDiscoverer(Options classgraphOptions) {
     this.classgraphOptions = classgraphOptions;
     this.classGraph = new ClassGraph();
   }
@@ -65,7 +62,7 @@ public final class ClassgraphDiscoverer implements Discoverer {
    * @return
    */
   private ClassgraphDiscoverer scanPackages(Set<String> scanPackages, String scanPackageName) {
-    if (Objects.isNull(scanPackageName) || !scanPackageName.contains(".")) {
+    if (Objects.isNull(scanPackageName) || Files.exists(Paths.get(scanPackageName))) {
       throw new IllegalArgumentException("scanPackageName cannot be empty and needs to conform to the specification");
     }
     if (Objects.isNull(scanPackages)) {

@@ -32,7 +32,6 @@ import java.util.List;
 public final class BeanDefinition implements Serializable {
   private String name;
   private String simpleName;
-  private Long classSize;
   private Class<?>[] implInterfaces;
   private Class<?> extendsClass;
   private Field[] fields;
@@ -54,14 +53,6 @@ public final class BeanDefinition implements Serializable {
 
   public void setSimpleName(String simpleName) {
     this.simpleName = simpleName;
-  }
-
-  public Long getClassSize() {
-    return classSize;
-  }
-
-  public void setClassSize(Long classSize) {
-    this.classSize = classSize;
   }
 
   public Class<?>[] getImplInterfaces() {
@@ -117,7 +108,6 @@ public final class BeanDefinition implements Serializable {
     return "BeanDefinition{" +
             "name='" + name + '\'' +
             ", simpleName='" + simpleName + '\'' +
-            ", classSize=" + classSize +
             ", implInterfaces=" + Arrays.toString(implInterfaces) +
             ", extendsClass=" + extendsClass +
             ", fields=" + Arrays.toString(fields) +

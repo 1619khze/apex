@@ -23,6 +23,7 @@
  */
 package org.apex;
 
+import io.github.classgraph.ScanResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -62,6 +63,12 @@ public final class Apex {
   private Class<?> bootCls;
   private String[] mainArgs;
 
+  private final ApexContext apexContext = ApexContext.of();
+
+  public ApexContext apexContext() {
+    return apexContext;
+  }
+
   private Apex() {
   }
 
@@ -94,7 +101,7 @@ public final class Apex {
   }
 
   public static Apex of() {
-    return new Apex();
+    return ApexHolder.instance;
   }
 
   public boolean verbose() {
@@ -182,21 +189,29 @@ public final class Apex {
     return this;
   }
 
-  public <T> void start(Class<T> bootCls, String[] mainArgs) {
+  public synchronized <T> void start(Class<T> bootCls, String[] mainArgs) {
     requireNonNull(bootCls, "Apex needs to specify the startup class when starting.");
     try {
       this.bootCls = bootCls;
-      this.scanPath = bootCls.getPackageName();
+      this.scanPath = bootCls.getPackage().getName();
       this.loadConfig(mainArgs);
       this.singleExecutor();
     } catch (IllegalAccessException e) {
       log.error("An exception occurred while loading the configuration", e);
     }
     try {
-      final Thread bootThread = new Thread(performScan());
-      final String threadName = this.environment.get(PATH_APP_THREAD_NAME, SERVER_THREAD_NAME);
-      bootThread.setName(threadName);
-      this.singleExecutor.execute(bootThread);
+      this.singleExecutor.execute(() -> {
+        if (Objects.isNull(discoverer)) {
+          this.discoverer = new ClassgraphDiscoverer(Optional.ofNullable(this.options)
+                  .orElseGet(this::buildOptions));
+        }
+        if (Objects.isNull(beanResolver)) {
+          this.beanResolver = new DefaultBeanResolver();
+        }
+        final ScanResult scanResult = discoverer.discover(scanPath);
+        final Map<String, BeanDefinition> resolve = this.beanResolver.resolve(scanResult);
+        this.apexContext.init(resolve);
+      });
     } catch (Exception e) {
       log.error("Bean resolve be exception:", e);
     }
@@ -224,29 +239,21 @@ public final class Apex {
             .build();
   }
 
-  /**
-   * perform scan
-   *
-   * @return Runnable
-   */
-  private Runnable performScan() {
-    this.options = Optional.ofNullable(this.options).orElseGet(this::buildOptions);
-    return () -> Optional.ofNullable(this.beanResolver)
-            .orElseGet(DefaultBeanResolver::new).resolve(Optional.ofNullable(discoverer)
-                    .orElseGet(ClassgraphDiscoverer.of(options)).discover(scanPath));
+  private static class ApexHolder {
+    private static final Apex instance = new Apex();
   }
 
   /**
-   * Load configuration from multiple places between startup services. Support items are:
-   * Properties are configured by default, and the properties loaded by default are
-   * application.properties
-   * If there is no properties configuration, the yaml format is used, and the default
-   * yaml loaded is application.yml
-   * Support loading configuration from args array of main function
-   * Support loading configuration from System.Property
+   * Load configuration from multiple places between startup services.
+   * Support items are: Properties are configured by default, and the
+   * properties loaded by default are application.properties If there
+   * is no properties configuration, the yaml format is used, and the
+   * default yaml loaded is application.yml Support loading
+   * configuration from args array of main function Support loading
+   * configuration from System.Property
    *
-   * @param args
-   * @throws IllegalAccessException
+   * @param args main method args
+   * @throws IllegalAccessException IllegalAccessException
    */
   private void loadConfig(String[] args) throws IllegalAccessException {
     String bootConf = environment().get(PATH_SERVER_BOOT_CONFIG, PATH_CONFIG_PROPERTIES);
@@ -257,14 +264,18 @@ public final class Apex {
 
     this.loadPropsOrYaml(bootConfEnv, constField);
 
+    /** Support loading configuration from args array of main function. */
     if (!requireNonNull(bootConfEnv).isEmpty()) {
       Map<String, String> bootEnvMap = bootConfEnv.toStringMap();
       Set<Map.Entry<String, String>> entrySet = bootEnvMap.entrySet();
-      entrySet.forEach(entry -> this.environment.add(entry.getKey(), entry.getValue()));
+
+      entrySet.forEach(entry -> this.environment
+              .add(entry.getKey(), entry.getValue()));
+
       this.masterConfig = true;
     }
 
-    if (argsMap.get(PATH_SERVER_PROFILE) != null) {
+    if (Objects.nonNull(argsMap.get(PATH_SERVER_PROFILE))) {
       String envNameArg = argsMap.get(PATH_SERVER_PROFILE);
       this.envConfig(envNameArg);
       this.envName = envNameArg;
@@ -274,7 +285,7 @@ public final class Apex {
 
     if (!envConfig) {
       String profileName = this.environment.get(PATH_SERVER_PROFILE);
-      if (profileName != null && !profileName.equals("")) {
+      if (Objects.nonNull(profileName) && !"".equals(profileName)) {
         envConfig(profileName);
         this.envName = profileName;
       }
@@ -284,18 +295,18 @@ public final class Apex {
   /**
    * load properties and yaml
    *
-   * @param bootConfEnv Environment
-   * @param constField  Map<String, String> constField
+   * @param bootConfEnv Environment used when the server starts
+   * @param constField  Constant attribute map
    */
   private void loadPropsOrYaml(Environment bootConfEnv, Map<String, String> constField) {
-    /** Properties are configured by default, and the
-     * properties loaded by default are application.properties.*/
+    /** Properties are configured by default, and the properties loaded
+     * by default are application.properties */
     constField.keySet().forEach(key ->
             Optional.ofNullable(System.getProperty(constField.get(key)))
                     .ifPresent(property -> bootConfEnv.add(key, property)));
 
-    /** If there is no properties configuration, the yaml
-     * format is used, and the default yaml loaded is application.yml */
+    /** If there is no properties configuration, the yaml format is
+     * used, and the default yaml loaded is application.yml */
     if (bootConfEnv.isEmpty()) {
       Optional.ofNullable(PropertyUtils.yaml(PATH_CONFIG_YAML))
               .ifPresent(yamlConfigTreeMap ->
@@ -307,13 +318,12 @@ public final class Apex {
   /**
    * Load main function parameters, and override if main configuration exists
    *
-   * @param args
-   * @return
+   * @param args String parameter array of main method
+   * @return Write the parameters to the map and return
    */
   private Map<String, String> loadMainArgs(String[] args) {
     Map<String, String> argsMap = PropertyUtils.parseArgs(args);
     if (argsMap.size() > 0) {
-      this.mainArgs = args;
       log.info("Entered command line:{}", argsMap.toString());
     }
 
@@ -323,12 +333,13 @@ public final class Apex {
     return argsMap;
   }
 
+
   /**
    * Load the environment configuration, if it exists in the main
    * configuration, it will be overwritten in the environment
    * configuration
    *
-   * @param envName
+   * @param envName Environment name
    */
   private void envConfig(String envName) {
     String envFileName = "application" + "-" + envName + ".properties";
@@ -338,7 +349,8 @@ public final class Apex {
       customerEnv = Environment.of(envYmlFileName);
     }
     if (!customerEnv.isEmpty()) {
-      customerEnv.props().forEach((key, value) -> this.environment.add(key.toString(), value));
+      customerEnv.props().forEach((key, value) ->
+              this.environment.add(key.toString(), value));
     }
     this.environment.add(PATH_SERVER_PROFILE, envName);
   }
