@@ -23,19 +23,20 @@
  */
 package org.apex;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
 import java.util.*;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  * @author WangYi
  * @since 2019/6/5
  */
 public final class Environment {
-  private static final Logger log = Logger.getLogger(Environment.class.getName());
+  private static final Logger log = LoggerFactory.getLogger(Environment.class);
 
   private final Properties properties = new Properties();
 
@@ -126,7 +127,7 @@ public final class Environment {
     try {
       this.properties.load(reader);
     } catch (IOException e) {
-      log.log(Level.WARNING, "IOException:", e);
+      log.error("IOException:", e);
     }
   }
 
@@ -134,7 +135,7 @@ public final class Environment {
     try {
       this.properties.load(inputStream);
     } catch (IOException e) {
-      log.log(Level.WARNING, "IOException:", e);
+      log.error("IOException:", e);
     }
   }
 
