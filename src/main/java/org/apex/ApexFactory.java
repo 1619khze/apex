@@ -38,15 +38,11 @@ public interface ApexFactory {
 
   <T> T addBean(Object obj);
 
-  <T> List<Class<T>> getBeanByType(Class<T> cls);
+  <T> List<T> getBeanByType(Class<T> cls);
 
-  <T> List<Class<T>> getBeanByType(Object obj);
-
-  <T> void removeAll(Class<T> cls);
+  <T> List<T> getBeanByType(Object obj);
 
   void removeAll();
-
-  void removeAll(Object obj);
 
   void removeBean(String beanName);
 }
