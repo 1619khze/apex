@@ -26,6 +26,6 @@ package org.apex;
 import io.github.classgraph.ScanResult;
 
 @FunctionalInterface
-public interface Discoverer {
+public interface Scanner {
   ScanResult discover(String scanPath);
 }

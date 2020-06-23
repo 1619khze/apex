@@ -58,7 +58,7 @@ public final class Apex {
   /** Scan related objects and configuration information. */
   private Options options;
   private String scanPath;
-  private Discoverer discoverer;
+  private Scanner scanner;
   private BeanResolver beanResolver;
   private Class<?> bootCls;
   private String[] mainArgs;
@@ -132,9 +132,9 @@ public final class Apex {
     return mainArgs;
   }
 
-  public Apex discoverer(Discoverer discoverer) {
-    requireArgument(this.discoverer == null, "Discoverer can't be null");
-    this.discoverer = Objects.requireNonNull(discoverer);
+  public Apex discoverer(Scanner scanner) {
+    requireArgument(this.scanner == null, "Discoverer can't be null");
+    this.scanner = Objects.requireNonNull(scanner);
     return this;
   }
 
@@ -201,14 +201,14 @@ public final class Apex {
     }
     try {
       this.singleExecutor.execute(() -> {
-        if (Objects.isNull(discoverer)) {
-          this.discoverer = new ClassgraphDiscoverer(Optional.ofNullable(this.options)
+        if (Objects.isNull(scanner)) {
+          this.scanner = new ClassgraphScanner(Optional.ofNullable(this.options)
                   .orElseGet(this::buildOptions));
         }
         if (Objects.isNull(beanResolver)) {
           this.beanResolver = new DefaultBeanResolver();
         }
-        final ScanResult scanResult = discoverer.discover(scanPath);
+        final ScanResult scanResult = scanner.discover(scanPath);
         final Map<String, BeanDefinition> resolve = this.beanResolver.resolve(scanResult);
         this.apexContext.init(resolve);
       });

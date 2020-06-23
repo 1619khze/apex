@@ -32,12 +32,12 @@ import java.util.LinkedHashSet;
 import java.util.Objects;
 import java.util.Set;
 
-public final class ClassgraphDiscoverer implements Discoverer {
+public final class ClassgraphScanner implements Scanner {
 
   private final Options classgraphOptions;
   private final ClassGraph classGraph;
 
-  public ClassgraphDiscoverer(Options classgraphOptions) {
+  public ClassgraphScanner(Options classgraphOptions) {
     this.classgraphOptions = classgraphOptions;
     this.classGraph = new ClassGraph();
   }
@@ -61,7 +61,7 @@ public final class ClassgraphDiscoverer implements Discoverer {
    * @param scanPackageName
    * @return
    */
-  private ClassgraphDiscoverer scanPackages(Set<String> scanPackages, String scanPackageName) {
+  private ClassgraphScanner scanPackages(Set<String> scanPackages, String scanPackageName) {
     if (Objects.isNull(scanPackageName) || Files.exists(Paths.get(scanPackageName))) {
       throw new IllegalArgumentException("scanPackageName cannot be empty and needs to conform to the specification");
     }
@@ -79,7 +79,7 @@ public final class ClassgraphDiscoverer implements Discoverer {
    * @param blackList
    * @return
    */
-  private ClassgraphDiscoverer skipPackages(Set<String> blackList) {
+  private ClassgraphScanner skipPackages(Set<String> blackList) {
     if (blackList != null && blackList.size() > 0) {
       this.classGraph.blacklistPackages(blackList.toArray(new String[0]));
     }
@@ -92,7 +92,7 @@ public final class ClassgraphDiscoverer implements Discoverer {
    * @param verbose
    * @return
    */
-  private ClassgraphDiscoverer verbose(boolean verbose) {
+  private ClassgraphScanner verbose(boolean verbose) {
     if (verbose) {
       this.classGraph.verbose();
     }
