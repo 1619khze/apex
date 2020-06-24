@@ -94,7 +94,7 @@ public class AbstractApexFactory implements ApexFactory {
       requireNonNull(ref, "It cannot be instantiated based on bean name");
       return addBean(ref);
     } catch (ClassNotFoundException e) {
-      e.printStackTrace();
+      log.error("An exception occurred while creating an instance via reflection", e);
     }
     return null;
   }
