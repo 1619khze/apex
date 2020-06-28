@@ -24,13 +24,18 @@
 package org.apex;
 
 import io.github.classgraph.ScanResult;
+import org.apex.scheduler.Scheduler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.StringReader;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
+import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.RejectedExecutionException;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 
 import static java.util.Objects.requireNonNull;
 import static org.apex.Const.*;
@@ -51,17 +56,18 @@ public final class Apex {
   /** Current environment and unified environment objects. */
   private String envName = ENV_NAME;
   private Environment environment = new Environment();
-
-  /** Cacheable thread pool for running scanning services. */
-  private Executor singleExecutor;
+  private BeanResolver beanResolver = new DefaultBeanResolver();
+  private Options options = this.buildOptions();
+  private Scanner scanner = new ClassgraphScanner(options);
 
   /** Scan related objects and configuration information. */
-  private Options options;
   private String scanPath;
-  private Scanner scanner;
-  private BeanResolver beanResolver;
   private Class<?> bootCls;
   private String[] mainArgs;
+
+  /** Cacheable thread pool for running scanning services. */
+  private Scheduler scheduler;
+  private Executor executor;
 
   private final ApexContext apexContext = ApexContext.of();
 
@@ -132,19 +138,6 @@ public final class Apex {
     return mainArgs;
   }
 
-  public Apex discoverer(Scanner scanner) {
-    requireArgument(this.scanner == null, "Discoverer can't be null");
-    this.scanner = Objects.requireNonNull(scanner);
-    return this;
-  }
-
-  public Apex packages(String scanPath) {
-    requireArgument(scanPath.contains("."), "Need correct format");
-    this.scanPath = Objects.requireNonNull(scanPath);
-    this.packages.add(Objects.requireNonNull(scanPath));
-    return this;
-  }
-
   public Apex packages(Collection<String> packages) {
     if (!packages.isEmpty()) {
       this.packages.addAll(packages);
@@ -165,64 +158,119 @@ public final class Apex {
     return this;
   }
 
-  public <K, V> Apex removeListener(RemoveListener<K, V> removeListener) {
-    requireArgument(removeListener != null, "RemoveListener can't be null");
-    RemoveListener<K, V> kvRemoveListener = requireNonNull(removeListener);
+  public Apex scanner(Scanner scanner) {
+    requireArgument(this.scanner == null, "beanResolver was already set to %s", this.scanner);
+    this.scanner = Objects.requireNonNull(scanner);
+    return this;
+  }
+
+  public Apex packages(String scanPath) {
+    requireArgument(Files.exists(Paths.get(scanPath)), "Need a valid and existing scan path");
+    this.scanPath = Objects.requireNonNull(scanPath);
+    this.packages.add(Objects.requireNonNull(scanPath));
     return this;
   }
 
   public Apex environment(Environment environment) {
-    requireArgument(this.environment == null, "Environment can't be null");
-    this.environment = Objects.requireNonNull(environment);
+    requireArgument(this.environment == null, "beanResolver was already set to %s", this.environment);
+    this.environment = requireNonNull(environment);
     return this;
   }
 
   public Apex resolver(BeanResolver beanResolver) {
-    requireArgument(this.beanResolver == null, "BeanResolver can't be null");
-    this.beanResolver = Objects.requireNonNull(beanResolver);
+    requireArgument(this.beanResolver == null, "beanResolver was already set to %s", this.beanResolver);
+    this.beanResolver = requireNonNull(beanResolver);
     return this;
   }
 
   public Apex options(Options options) {
-    requireArgument(this.options == null, "Optional can't be null");
-    this.options = Objects.requireNonNull(options);
+    requireArgument(this.options == null, "options was already set to %s", this.options);
+    this.options = requireNonNull(options);
     return this;
   }
 
-  public synchronized <T> void start(Class<T> bootCls, String[] mainArgs) {
+  /**
+   * Specifies the scheduler to use when scheduling routine maintenance based on an expiration
+   * event. This augments the periodic maintenance that occurs during normal cache operations to
+   * allow for the prompt removal of expired entries regardless of whether any cache activity is
+   * occurring at that time. By default, {@link Scheduler#disabledScheduler()} is used.
+   * <p>
+   * The scheduling between expiration events is paced to exploit batching and to minimize
+   * executions in short succession. This minimum difference between the scheduled executions is
+   * implementation-specific, currently at ~1 second (2^30 ns). In addition, the provided scheduler
+   * may not offer real-time guarantees (including {@link ScheduledThreadPoolExecutor}). The
+   * scheduling is best-effort and does not make any hard guarantees of when an expired entry will
+   * be removed.
+   * <p>
+   * <b>Note for Java 9 and later:</b> consider using {@link Scheduler#systemScheduler()} to
+   * leverage the dedicated, system-wide scheduling thread.
+   *
+   * @param scheduler the scheduler that submits a task to the {@link #executor(Executor)} after a
+   *                  given delay
+   * @return this {@code Caffeine} instance (for chaining)
+   * @throws NullPointerException if the specified scheduler is null
+   */
+  public Apex scheduler(Scheduler scheduler) {
+    requireState(this.scheduler == null, "scheduler was already set to %s", this.scheduler);
+    this.scheduler = requireNonNull(scheduler);
+    return this;
+  }
+
+  /**
+   * Specifies the executor to use when running asynchronous tasks. The executor is delegated to
+   * when sending removal notifications, when asynchronous computations are performed by
+   * {@link AsyncCache} or {@link LoadingCache#refresh} or {@link #refreshAfterWrite}, or when
+   * performing periodic maintenance. By default, {@link ForkJoinPool#commonPool()} is used.
+   * <p>
+   * The primary intent of this method is to facilitate testing of caches which have been configured
+   * with {@link #removalListener} or utilize asynchronous computations. A test may instead prefer
+   * to configure the cache to execute tasks directly on the same thread.
+   * <p>
+   * Beware that configuring a cache with an executor that throws {@link RejectedExecutionException}
+   * may experience non-deterministic behavior.
+   *
+   * @param executor the executor to use for asynchronous execution
+   * @return this {@code Caffeine} instance (for chaining)
+   * @throws NullPointerException if the specified executor is null
+   */
+  public Apex executor(Executor executor) {
+    requireState(this.executor == null, "executor was already set to %s", this.executor);
+    this.executor = requireNonNull(executor);
+    return this;
+  }
+
+  public Scheduler getScheduler() {
+    if ((scheduler == null) || (scheduler == Scheduler.disabledScheduler())) {
+      return Scheduler.disabledScheduler();
+    } else if (scheduler == Scheduler.systemScheduler()) {
+      return scheduler;
+    }
+    return Scheduler.guardedScheduler(scheduler);
+  }
+
+  public Executor getExecutor() {
+    return (executor == null) ? ForkJoinPool.commonPool() : executor;
+  }
+
+  public void start(Class<?> bootCls, String[] mainArgs) {
     requireNonNull(bootCls, "Apex needs to specify the startup class when starting.");
     try {
       this.bootCls = bootCls;
       this.scanPath = bootCls.getPackage().getName();
       this.loadConfig(mainArgs);
-      this.singleExecutor();
     } catch (IllegalAccessException e) {
       log.error("An exception occurred while loading the configuration", e);
     }
     try {
-      this.singleExecutor.execute(() -> {
-        if (Objects.isNull(scanner)) {
-          this.scanner = new ClassgraphScanner(Optional.ofNullable(this.options)
-                  .orElseGet(this::buildOptions));
-        }
-        if (Objects.isNull(beanResolver)) {
-          this.beanResolver = new DefaultBeanResolver();
-        }
+      Thread thread =new Thread(() -> {
         final ScanResult scanResult = scanner.discover(scanPath);
-        final Map<String, BeanDefinition> resolve = this.beanResolver.resolve(scanResult);
-        this.apexContext.init(resolve);
-      });
+        final Map<String, BeanDefinition> beanDefinitionMap = beanResolver.resolve(scanResult);
+        apexContext.init(beanDefinitionMap);
+      }, SERVER_THREAD_NAME);
+      thread.start();
     } catch (Exception e) {
       log.error("Bean resolve be exception:", e);
     }
-  }
-
-  /**
-   * Create a cacheable single thread pool according to Thread Factory
-   */
-  private void singleExecutor() {
-    this.singleExecutor = Executors.newCachedThreadPool(
-            new ApexThreadFactory(SINGLE_EXECUTOR_NAME));
   }
 
   /**
