@@ -25,6 +25,7 @@ package org.apex;
 
 import io.github.classgraph.ScanResult;
 import org.apex.scheduler.Scheduler;
+import org.apex.utils.PropertyUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
