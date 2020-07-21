@@ -39,6 +39,7 @@ import static java.util.Objects.requireNonNull;
  * @author WangYi
  * @since 2020/6/22
  */
+@SuppressWarnings("unchecked")
 public class AbstractApexFactory implements ApexFactory {
   private static final Logger log = LoggerFactory.getLogger(AbstractApexFactory.class);
 
@@ -47,7 +48,6 @@ public class AbstractApexFactory implements ApexFactory {
 
   private final ReadWriteLock reentrantLock = new ReentrantReadWriteLock();
 
-  @SuppressWarnings("unchecked")
   @Override
   public <T> T getBean(Class<T> cls) {
     requireNonNull(cls, "cls must not be null");
@@ -58,14 +58,12 @@ public class AbstractApexFactory implements ApexFactory {
     return null;
   }
 
-  @SuppressWarnings("unchecked")
   @Override
   public <T> T getBean(String beanName) {
     requireNonNull(beanName, "beanName must not be null");
     return ((T) instanceMapping.get(beanName));
   }
 
-  @SuppressWarnings("unchecked")
   @Override
   public <T> T getBean(Object obj) {
     requireNonNull(obj, "beanName must not be null");
@@ -85,7 +83,6 @@ public class AbstractApexFactory implements ApexFactory {
     }
   }
 
-  @SuppressWarnings("unchecked")
   @Override
   public <T> T addBean(String beanName) {
     requireNonNull(beanName, "beanName must not be null");
@@ -99,14 +96,12 @@ public class AbstractApexFactory implements ApexFactory {
     return null;
   }
 
-  @SuppressWarnings("unchecked")
   @Override
   public <T> T addBean(Object obj) {
     requireNonNull(obj, "obj must not be null");
     return addBean((Class<T>) obj.getClass());
   }
 
-  @SuppressWarnings("unchecked")
   @Override
   public <T> List<T> getBeanByType(Class<T> cls) {
     requireNonNull(cls, "cls must not be null");
@@ -123,7 +118,6 @@ public class AbstractApexFactory implements ApexFactory {
     return refs;
   }
 
-  @SuppressWarnings("unchecked")
   @Override
   public <T> List<T> getBeanByType(Object obj) {
     requireNonNull(obj, "obj must not be null");
