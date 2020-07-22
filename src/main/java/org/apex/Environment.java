@@ -146,12 +146,9 @@ public final class Environment {
     }
   }
 
-  @SuppressWarnings("rawtypes")
   public Map<String, Object> toMap(Properties properties) {
     Map<String, Object> argsMap = new HashMap<>();
-    Set propertySet = properties.entrySet();
-    for (Object o : propertySet) {
-      Map.Entry entry = (Map.Entry) o;
+    for (Map.Entry<Object, Object> entry : properties.entrySet()) {
       argsMap.put(String.valueOf(entry.getKey()), entry.getValue());
     }
     return argsMap;
