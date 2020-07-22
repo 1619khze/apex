@@ -31,7 +31,12 @@ import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Field;
 import java.net.URL;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 
 import static com.sun.jna.Platform.isWindows;
 
@@ -63,12 +68,15 @@ public final class PropertyUtils {
 
   @SuppressWarnings("unchecked")
   public static String toString(String key, Map<String, Object> map) {
-    StringBuilder sb = new StringBuilder();
-    for (String mapKey : map.keySet()) {
-      if (map.get(mapKey) instanceof Map) {
+    final StringBuilder sb = new StringBuilder();
+    for (final Map.Entry<String, Object> entry : map.entrySet()) {
+      final String mapKey = entry.getKey();
+      final Object mapValue = entry.getValue();
+      if (mapValue instanceof Map) {
         sb.append(toString(String.format("%s.%s", key, mapKey), (Map<String, Object>) map.get(mapKey)));
-      } else {
-        sb.append(String.format("%s.%s=%s%n", key, mapKey, map.get(mapKey).toString()));
+      }
+      else {
+        sb.append(String.format("%s.%s=%s%n", key, mapKey, mapValue.toString()));
       }
     }
     return sb.toString();
@@ -111,7 +119,8 @@ public final class PropertyUtils {
     if (null == url) {
       File f = new File(PropertyUtils.class.getProtectionDomain().getCodeSource().getLocation().getPath());
       path = f.getPath();
-    } else {
+    }
+    else {
       path = url.getPath();
     }
     try {
@@ -119,7 +128,8 @@ public final class PropertyUtils {
         return decode(path.replaceFirst("^/(.:/)", "$1"));
       }
       return decode(path);
-    } catch (UnsupportedEncodingException e) {
+    }
+    catch (UnsupportedEncodingException e) {
       return "/";
     }
   }
