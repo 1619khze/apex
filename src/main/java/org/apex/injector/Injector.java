@@ -21,43 +21,14 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package org.apex;
-
-import org.apex.injector.Injector;
+package org.apex.injector;
 
 import java.util.Map;
-import java.util.ServiceLoader;
 
 /**
  * @author WangYi
- * @since 2020/6/22
+ * @since 2020/7/9
  */
-public class ApexContext extends AbstractApexFactory {
-  private ApexContext() {}
-
-  public static ApexContext of() {
-    return ApexContextHolder.instance();
-  }
-
-  void init(Map<String, BeanDefinition> beanDefinitions) throws Exception {
-    this.beanDefinitions.putAll(beanDefinitions);
-    for (Map.Entry<String, BeanDefinition> entry : beanDefinitions.entrySet()) {
-      instanceMapping.put(entry.getKey(), entry.getValue().getInstants());
-    }
-    invokeInject();
-  }
-
-  private void invokeInject() throws Exception {
-    final ServiceLoader<Injector> injectors = ServiceLoader.load(Injector.class);
-    for (final Injector next : injectors) {
-      next.inject(instanceMapping);
-    }
-  }
-
-  private static class ApexContextHolder {
-    private static final ApexContext instance = new ApexContext();
-    public static ApexContext instance() {
-      return instance;
-    }
-  }
+public interface Injector {
+  void inject(Map<String, Object> instanceMapping) throws Exception;
 }
