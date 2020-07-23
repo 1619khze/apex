@@ -30,13 +30,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.StringReader;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.function.Supplier;
 
 import static java.util.Objects.requireNonNull;
 import static org.apex.Const.*;
@@ -45,12 +44,12 @@ public final class Apex {
   private static final Logger log = LoggerFactory.getLogger(Apex.class);
 
   /** List of paths to be scanned and ignored. */
-  private final Set<String> skipPaths = new LinkedHashSet<>();
-  private final Set<String> packages = new LinkedHashSet<>();
+  private static final Set<String> skipPaths = new LinkedHashSet<>();
+  private static final Set<String> packages = new LinkedHashSet<>();
 
   /** Variables about whether the scan status and environment configuration are enabled. */
-  private final boolean verbose = false;
-  private final boolean realtimeLogging = false;
+  private static final boolean verbose = false;
+  private static final boolean realtimeLogging = false;
   private boolean envConfig = false;
   private boolean masterConfig = false;
 
@@ -58,7 +57,7 @@ public final class Apex {
   private String envName = ENV_NAME;
   private Environment environment = new Environment();
   private BeanResolver beanResolver = new DefaultBeanResolver();
-  private Options options = this.buildOptions();
+  private Options options = Apex.buildOptions();
   private Scanner scanner = new ClassgraphScanner(options);
 
   /** Scan related objects and configuration information. */
@@ -73,11 +72,18 @@ public final class Apex {
   private final ApexContext apexContext = ApexContext.of();
 
   public ApexContext apexContext() {
+    try {
+      this.loadConfig(mainArgs);
+      final ScanResult scanResult = scanner.discover(scanPath);
+      final Map<String, BeanDefinition> beanDefinitionMap = beanResolver.resolve(scanResult);
+      this.apexContext.init(beanDefinitionMap);
+    } catch (Exception e) {
+      log.error("Bean resolve be exception:", e);
+    }
     return apexContext;
   }
 
-  private Apex() {
-  }
+  private Apex() {}
 
   /** Ensures that the argument expression is true. */
   static void requireArgument(boolean expression, String template, Object... args) {
@@ -112,11 +118,11 @@ public final class Apex {
   }
 
   public boolean verbose() {
-    return this.verbose;
+    return verbose;
   }
 
   public boolean realtimeLogging() {
-    return this.realtimeLogging;
+    return realtimeLogging;
   }
 
   public Environment environment() {
@@ -131,30 +137,22 @@ public final class Apex {
     return envName;
   }
 
-  public Class<?> bootCls() {
-    return bootCls;
-  }
-
-  public String[] mainArgs() {
-    return mainArgs;
-  }
-
   public Apex packages(Collection<String> packages) {
     if (!packages.isEmpty()) {
-      this.packages.addAll(packages);
+      Apex.packages.addAll(packages);
     }
     return this;
   }
 
   public Apex skipPath(String skipPath) {
     requireArgument(skipPath.contains("."), "Need correct format");
-    this.skipPaths.add(Objects.requireNonNull(skipPath));
+    Apex.skipPaths.add(Objects.requireNonNull(skipPath));
     return this;
   }
 
   public Apex skipPath(Collection<String> skipPaths) {
     if (!skipPaths.isEmpty()) {
-      this.skipPaths.addAll(skipPaths);
+      Apex.skipPaths.addAll(skipPaths);
     }
     return this;
   }
@@ -166,9 +164,9 @@ public final class Apex {
   }
 
   public Apex packages(String scanPath) {
-    requireArgument(Files.exists(Paths.get(scanPath)), "Need a valid and existing scan path");
-    this.scanPath = Objects.requireNonNull(scanPath);
-    this.packages.add(Objects.requireNonNull(scanPath));
+    requireArgument(scanPath != null, "Need a valid and existing scan path");
+    Apex.packages.add(scanPath);
+    this.scanPath = scanPath;
     return this;
   }
 
@@ -240,6 +238,20 @@ public final class Apex {
     return this;
   }
 
+  /**
+   * Get Executor, support through custom settings, if it is empty, use ForkJoinPool.commonPool
+   *
+   * @return An object that executes submitted {@link Runnable} tasks
+   */
+  public Executor getExecutor() {
+    return (executor == null) ? ForkJoinPool.commonPool() : executor;
+  }
+
+  /**
+   * Get Scheduler
+   *
+   * @return Scheduler
+   */
   public Scheduler getScheduler() {
     if ((scheduler == null) || (scheduler == Scheduler.disabledScheduler())) {
       return Scheduler.disabledScheduler();
@@ -249,37 +261,12 @@ public final class Apex {
     return Scheduler.guardedScheduler(scheduler);
   }
 
-  public Executor getExecutor() {
-    return (executor == null) ? ForkJoinPool.commonPool() : executor;
-  }
-
-  public void start(Class<?> bootCls, String[] mainArgs) {
-    requireNonNull(bootCls, "Apex needs to specify the startup class when starting.");
-    try {
-      this.bootCls = bootCls;
-      this.scanPath = bootCls.getPackage().getName();
-      this.loadConfig(mainArgs);
-    } catch (IllegalAccessException e) {
-      log.error("An exception occurred while loading the configuration", e);
-    }
-    try {
-      Thread thread =new Thread(() -> {
-        final ScanResult scanResult = scanner.discover(scanPath);
-        final Map<String, BeanDefinition> beanDefinitionMap = beanResolver.resolve(scanResult);
-        apexContext.init(beanDefinitionMap);
-      }, SERVER_THREAD_NAME);
-      thread.start();
-    } catch (Exception e) {
-      log.error("Bean resolve be exception:", e);
-    }
-  }
-
   /**
    * Scan options for building Classgraph
    *
    * @return ClassgraphOptions
    */
-  private ClassgraphOptions buildOptions() {
+  public static ClassgraphOptions buildOptions() {
     return ClassgraphOptions.builder()
             .verbose(verbose)
             .scanPackages(packages)
