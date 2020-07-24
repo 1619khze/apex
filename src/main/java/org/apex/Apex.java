@@ -23,9 +23,10 @@
  */
 package org.apex;
 
+import io.github.classgraph.ClassInfoList;
 import io.github.classgraph.ScanResult;
 import org.apex.loader.BeanDefinitionLoader;
-import org.apex.loader.SingletonBeanDefinitionLoader;
+import org.apex.loader.JavaBeanDefinitionLoader;
 import org.apex.scheduler.Scheduler;
 import org.apex.utils.PropertyUtils;
 import org.slf4j.Logger;
@@ -57,7 +58,7 @@ public final class Apex {
   /** Current environment and unified environment objects. */
   private String envName = ENV_NAME;
   private Environment environment = new Environment();
-  private BeanDefinitionLoader beanDefinitionLoader = new SingletonBeanDefinitionLoader();
+  private BeanDefinitionLoader beanDefinitionLoader = new JavaBeanDefinitionLoader();
   private Options options = Apex.buildOptions();
   private Scanner scanner = new ClassgraphScanner(options);
 
@@ -74,9 +75,14 @@ public final class Apex {
 
   public ApexContext apexContext() {
     try {
-      final ScanResult scanResult = scanner.discover(scanPath);
       this.loadConfig(mainArgs);
-      this.apexContext.init(scanResult);
+
+      final ScanResult scanResult = scanner.discover(scanPath);
+      final ClassInfoList allClasses = scanResult.getAllClasses();
+      final List<Class<?>> classes = allClasses.loadClasses();
+      Map<String, BeanDefinition> beanDefinitionMap = this.beanDefinitionLoader.load(classes);
+
+      this.apexContext.init(beanDefinitionMap);
     } catch (Exception e) {
       log.error("Bean resolve be exception:", e);
     }

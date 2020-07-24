@@ -23,9 +23,7 @@
  */
 package org.apex;
 
-import io.github.classgraph.ScanResult;
 import org.apex.injector.Injector;
-import org.apex.loader.AbstractBeanDefinitionLoader;
 
 import java.util.Map;
 import java.util.ServiceLoader;
@@ -42,22 +40,14 @@ public class ApexContext extends AbstractApexFactory {
     return ApexContextHolder.instance();
   }
 
-  protected void init(ScanResult scanResult) throws Exception {
-    final ServiceLoader<AbstractBeanDefinitionLoader> beanDefinitionLoaders
-            = ServiceLoader.load(AbstractBeanDefinitionLoader.class);
-
-    final ServiceLoader<Injector> injectors = ServiceLoader.load(Injector.class);
-
-    for (AbstractBeanDefinitionLoader beanDefinitionLoader : beanDefinitionLoaders) {
-      beanDefinitionLoader.load(scanResult);
-      Map<String, BeanDefinition> beanDefinitionMap = beanDefinitionLoader.getBeanDefinitionMap();
-      this.beanDefinitions.putAll(beanDefinitionMap);
-    }
+  protected void init(Map<String, BeanDefinition> beanDefinitionMap) throws Exception {
+    this.beanDefinitions.putAll(beanDefinitionMap);
 
     for (Map.Entry<String, BeanDefinition> entry : beanDefinitions.entrySet()) {
       this.instanceMapping.put(entry.getKey(), entry.getValue().getInstants());
     }
 
+    ServiceLoader<Injector> injectors = ServiceLoader.load(Injector.class);
     for (final Injector next : injectors) {
       next.inject(instanceMapping);
     }

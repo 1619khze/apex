@@ -3,14 +3,14 @@ package org.apex.loader;
 import io.github.classgraph.ScanResult;
 import org.apex.AbstractApexFactory;
 import org.apex.BeanDefinition;
+import org.apex.annotation.Configuration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.inject.Singleton;
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Modifier;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
@@ -18,11 +18,17 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  * @author WangYi
  * @since 2020/7/24
  */
-public abstract class AbstractBeanDefinitionLoader implements BeanDefinitionLoader {
+public class JavaBeanDefinitionLoader implements BeanDefinitionLoader {
   private static final Logger log = LoggerFactory.getLogger(AbstractApexFactory.class);
 
   protected final Map<String, BeanDefinition> beanDefinitionMap = new ConcurrentHashMap<>(64);
+  protected final List<Class<? extends Annotation>> annotatedElements = new ArrayList<>();
   protected final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
+
+  public JavaBeanDefinitionLoader() {
+    this.annotatedElements.add(Singleton.class);
+    this.annotatedElements.add(Configuration.class);
+  }
 
   protected void registerBeanDefinition(Map<Object, Class<?>> candidateMap) {
     if (Objects.isNull(candidateMap) || candidateMap.isEmpty()) {
@@ -67,8 +73,9 @@ public abstract class AbstractBeanDefinitionLoader implements BeanDefinitionLoad
     scanResult.close();
   }
 
-  protected Map<Object, Class<?>> filterCandidates(List<Class<?>> collection, long startMs) {
+  protected Map<Object, Class<?>> filterCandidates(List<Class<?>> collection) {
     final Map<Object, Class<?>> candidates = new HashMap<>();
+
     collection.stream().filter(next -> {
       int modifiers = next.getModifiers();
       return !next.isAnnotation() && !next.isEnum() && !Modifier.isAbstract(modifiers);
@@ -80,8 +87,7 @@ public abstract class AbstractBeanDefinitionLoader implements BeanDefinitionLoad
       Object instance = getObject(next);
       candidates.put(Objects.requireNonNull(instance), next);
     });
-    long completeTime = (System.currentTimeMillis() - startMs);
-    log.info("The bean scan is complete time consuming: {}ms", completeTime);
+
     log.info("A total of {} eligible and registerable beans were scanned", candidates.size());
     log.info("Candidate selection is completed and encapsulated as Bean Definition after being instantiated");
     return Objects.requireNonNull(candidates);
@@ -96,7 +102,18 @@ public abstract class AbstractBeanDefinitionLoader implements BeanDefinitionLoad
     }
   }
 
-  public Map<String, BeanDefinition> getBeanDefinitionMap() {
+  @Override
+  public Map<String, BeanDefinition> load(List<Class<?>> classList) {
+    final List<Class<?>> collection = new ArrayList<>();
+
+    for (Class<?> cls : classList) {
+      Annotation[] declaredAnnotations = cls.getDeclaredAnnotations();
+      this.annotatedElements.containsAll(Arrays.asList(declaredAnnotations));
+      collection.add(cls);
+    }
+    Map<Object, Class<?>> objectClassMap = this.filterCandidates(collection);
+    registerBeanDefinition(objectClassMap);
+
     return beanDefinitionMap;
   }
 }

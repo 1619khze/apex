@@ -23,8 +23,11 @@
  */
 package org.apex.loader;
 
-import io.github.classgraph.ScanResult;
+import org.apex.BeanDefinition;
+
+import java.util.List;
+import java.util.Map;
 
 public interface BeanDefinitionLoader {
-  void load(ScanResult scanResult);
+  Map<String, BeanDefinition> load(List<Class<?>> classList);
 }
