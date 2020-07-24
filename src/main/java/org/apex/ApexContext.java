@@ -23,7 +23,9 @@
  */
 package org.apex;
 
+import io.github.classgraph.ScanResult;
 import org.apex.injector.Injector;
+import org.apex.loader.AbstractBeanDefinitionLoader;
 
 import java.util.Map;
 import java.util.ServiceLoader;
@@ -33,22 +35,29 @@ import java.util.ServiceLoader;
  * @since 2020/6/22
  */
 public class ApexContext extends AbstractApexFactory {
-  private ApexContext() {}
+  private ApexContext() {
+  }
 
   public static ApexContext of() {
     return ApexContextHolder.instance();
   }
 
-  void init(Map<String, BeanDefinition> beanDefinitions) throws Exception {
-    this.beanDefinitions.putAll(beanDefinitions);
-    for (Map.Entry<String, BeanDefinition> entry : beanDefinitions.entrySet()) {
-      instanceMapping.put(entry.getKey(), entry.getValue().getInstants());
-    }
-    invokeInject();
-  }
+  protected void init(ScanResult scanResult) throws Exception {
+    final ServiceLoader<AbstractBeanDefinitionLoader> beanDefinitionLoaders
+            = ServiceLoader.load(AbstractBeanDefinitionLoader.class);
 
-  private void invokeInject() throws Exception {
     final ServiceLoader<Injector> injectors = ServiceLoader.load(Injector.class);
+
+    for (AbstractBeanDefinitionLoader beanDefinitionLoader : beanDefinitionLoaders) {
+      beanDefinitionLoader.load(scanResult);
+      Map<String, BeanDefinition> beanDefinitionMap = beanDefinitionLoader.getBeanDefinitionMap();
+      this.beanDefinitions.putAll(beanDefinitionMap);
+    }
+
+    for (Map.Entry<String, BeanDefinition> entry : beanDefinitions.entrySet()) {
+      this.instanceMapping.put(entry.getKey(), entry.getValue().getInstants());
+    }
+
     for (final Injector next : injectors) {
       next.inject(instanceMapping);
     }
@@ -56,6 +65,7 @@ public class ApexContext extends AbstractApexFactory {
 
   private static class ApexContextHolder {
     private static final ApexContext instance = new ApexContext();
+
     public static ApexContext instance() {
       return instance;
     }

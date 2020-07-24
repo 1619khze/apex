@@ -21,12 +21,10 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package org.apex;
+package org.apex.loader;
 
 import io.github.classgraph.ScanResult;
 
-import java.util.Map;
-
-public interface BeanResolver{
-  Map<String, BeanDefinition> resolve(ScanResult scanResult);
+public interface BeanDefinitionLoader {
+  void load(ScanResult scanResult);
 }

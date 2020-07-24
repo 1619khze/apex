@@ -24,6 +24,8 @@
 package org.apex;
 
 import io.github.classgraph.ScanResult;
+import org.apex.loader.BeanDefinitionLoader;
+import org.apex.loader.SingletonBeanDefinitionLoader;
 import org.apex.scheduler.Scheduler;
 import org.apex.utils.PropertyUtils;
 import org.slf4j.Logger;
@@ -35,7 +37,6 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
-import java.util.function.Supplier;
 
 import static java.util.Objects.requireNonNull;
 import static org.apex.Const.*;
@@ -56,7 +57,7 @@ public final class Apex {
   /** Current environment and unified environment objects. */
   private String envName = ENV_NAME;
   private Environment environment = new Environment();
-  private BeanResolver beanResolver = new DefaultBeanResolver();
+  private BeanDefinitionLoader beanDefinitionLoader = new SingletonBeanDefinitionLoader();
   private Options options = Apex.buildOptions();
   private Scanner scanner = new ClassgraphScanner(options);
 
@@ -73,10 +74,9 @@ public final class Apex {
 
   public ApexContext apexContext() {
     try {
-      this.loadConfig(mainArgs);
       final ScanResult scanResult = scanner.discover(scanPath);
-      final Map<String, BeanDefinition> beanDefinitionMap = beanResolver.resolve(scanResult);
-      this.apexContext.init(beanDefinitionMap);
+      this.loadConfig(mainArgs);
+      this.apexContext.init(scanResult);
     } catch (Exception e) {
       log.error("Bean resolve be exception:", e);
     }
@@ -176,9 +176,9 @@ public final class Apex {
     return this;
   }
 
-  public Apex resolver(BeanResolver beanResolver) {
-    requireArgument(this.beanResolver == null, "beanResolver was already set to %s", this.beanResolver);
-    this.beanResolver = requireNonNull(beanResolver);
+  public Apex resolver(BeanDefinitionLoader beanDefinitionLoader) {
+    requireArgument(this.beanDefinitionLoader == null, "beanResolver was already set to %s", this.beanDefinitionLoader);
+    this.beanDefinitionLoader = requireNonNull(beanDefinitionLoader);
     return this;
   }
 
