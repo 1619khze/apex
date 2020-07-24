@@ -69,10 +69,6 @@ public class JavaBeanDefinitionLoader implements BeanDefinitionLoader {
     return beanDefinition;
   }
 
-  protected void release(ScanResult scanResult) {
-    scanResult.close();
-  }
-
   protected Map<Object, Class<?>> filterCandidates(List<Class<?>> collection) {
     final Map<Object, Class<?>> candidates = new HashMap<>();
 
