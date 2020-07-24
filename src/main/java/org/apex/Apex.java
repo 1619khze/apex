@@ -64,7 +64,6 @@ public final class Apex {
 
   /** Scan related objects and configuration information. */
   private String scanPath;
-  private Class<?> bootCls;
   private String[] mainArgs;
 
   /** Cacheable thread pool for running scanning services. */
@@ -83,6 +82,7 @@ public final class Apex {
       Map<String, BeanDefinition> beanDefinitionMap = this.beanDefinitionLoader.load(classes);
 
       this.apexContext.init(beanDefinitionMap);
+      scanResult.close();
     } catch (Exception e) {
       log.error("Bean resolve be exception:", e);
     }
@@ -141,6 +141,12 @@ public final class Apex {
 
   public String envName() {
     return envName;
+  }
+
+  public Apex mainArgs(String[] mainArgs) {
+    requireArgument(Objects.nonNull(mainArgs), "mainArgs can't be null");
+    this.mainArgs = Objects.requireNonNull(mainArgs);
+    return this;
   }
 
   public Apex packages(Collection<String> packages) {
