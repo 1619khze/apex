@@ -1,6 +1,5 @@
 package org.apex.loader;
 
-import io.github.classgraph.ScanResult;
 import org.apex.AbstractApexFactory;
 import org.apex.BeanDefinition;
 import org.apex.annotation.Configuration;
@@ -9,6 +8,8 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Singleton;
 import java.lang.annotation.Annotation;
+import java.lang.invoke.MethodHandles;
+import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -24,6 +25,7 @@ public class JavaBeanDefinitionLoader implements BeanDefinitionLoader {
   protected final Map<String, BeanDefinition> beanDefinitionMap = new ConcurrentHashMap<>(64);
   protected final List<Class<? extends Annotation>> annotatedElements = new ArrayList<>();
   protected final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
+  private final MethodHandles.Lookup lookup = MethodHandles.lookup();
 
   public JavaBeanDefinitionLoader() {
     this.annotatedElements.add(Singleton.class);
@@ -40,11 +42,44 @@ public class JavaBeanDefinitionLoader implements BeanDefinitionLoader {
     for (Map.Entry<Object, Class<?>> entry : candidateMap.entrySet()) {
       final Object instants = entry.getKey();
       final Class<?> clazz = entry.getValue();
-      final BeanDefinition beanDefinition = this.buildBeanDefinition(instants, clazz);
-      if (log.isDebugEnabled())
-        log.debug("The beans that have completed the " +
-                "Bean Definition construction are:{}", beanDefinition.getName());
-      this.registerBeanDefinition(beanDefinition);
+      if (clazz.isAnnotationPresent(Configuration.class)) {
+        Method[] declaredMethods = clazz.getDeclaredMethods();
+        if (declaredMethods.length == 0) {
+          continue;
+        }
+        for (Method method : declaredMethods) {
+          Object object = invokeMethod(instants, method);
+          if (Objects.isNull(object)) {
+            continue;
+          }
+          this.registerBeanDefinition(instants, object.getClass());
+        }
+      } else {
+        this.registerBeanDefinition(instants, clazz);
+      }
+    }
+  }
+
+  private void registerBeanDefinition(Object instants, Class<?> clazz) {
+    final BeanDefinition beanDefinition = this.buildBeanDefinition(instants, clazz);
+    if (log.isDebugEnabled())
+      log.debug("The beans that have completed the " +
+              "Bean Definition construction are:{}", beanDefinition.getName());
+    this.registerBeanDefinition(beanDefinition);
+  }
+
+  private Object invokeMethod(Object instants, Method method) {
+    try {
+      if (method.getReturnType() == void.class) {
+        throw new IllegalArgumentException("The return value of the method marked with " +
+                "Bean annotation in the configuration cannot be " +
+                "void:{" + instants.getClass().getName() + "}" + "#" + method.getName());
+      }
+      Object[] EMPTY = new Object[]{};
+      return this.lookup.unreflect(method).bindTo(instants).invokeWithArguments(EMPTY);
+    } catch (Throwable throwable) {
+      log.error("An exception occurred when MethodHandler invoke a method ", throwable);
+      return null;
     }
   }
 
@@ -104,8 +139,14 @@ public class JavaBeanDefinitionLoader implements BeanDefinitionLoader {
 
     for (Class<?> cls : classList) {
       Annotation[] declaredAnnotations = cls.getDeclaredAnnotations();
-      this.annotatedElements.containsAll(Arrays.asList(declaredAnnotations));
-      collection.add(cls);
+      if (declaredAnnotations.length == 0) {
+        continue;
+      }
+      for (Annotation annotation : declaredAnnotations) {
+        if (this.annotatedElements.contains(annotation.annotationType())) {
+          collection.add(cls);
+        }
+      }
     }
     Map<Object, Class<?>> objectClassMap = this.filterCandidates(collection);
     registerBeanDefinition(objectClassMap);
