@@ -73,16 +73,15 @@ public final class Apex {
   private final ApexContext apexContext = ApexContext.of();
 
   public ApexContext apexContext() {
-    try {
+    try (ScanResult scanResult = scanner.discover(scanPath)) {
       this.loadConfig(mainArgs);
 
-      final ScanResult scanResult = scanner.discover(scanPath);
       final ClassInfoList allClasses = scanResult.getAllClasses();
       final List<Class<?>> classes = allClasses.loadClasses();
-      Map<String, BeanDefinition> beanDefinitionMap = this.beanDefinitionLoader.load(classes);
+      final Map<String, BeanDefinition> beanDefinitionMap
+              = this.beanDefinitionLoader.load(classes);
 
       this.apexContext.init(beanDefinitionMap);
-      scanResult.close();
     } catch (Exception e) {
       log.error("Bean resolve be exception:", e);
     }
