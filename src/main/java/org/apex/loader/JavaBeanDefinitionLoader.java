@@ -52,7 +52,7 @@ public class JavaBeanDefinitionLoader implements BeanDefinitionLoader {
           if (Objects.isNull(object)) {
             continue;
           }
-          this.registerBeanDefinition(instants, object.getClass());
+          this.registerBeanDefinition(object, object.getClass());
         }
       } else {
         this.registerBeanDefinition(instants, clazz);
