@@ -23,10 +23,15 @@
  */
 package org.apex.annotation;
 
+import java.lang.annotation.*;
+
 /**
  * @author WangYi
  * @since 2020/7/21
  */
+@Documented
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.FIELD)
 public @interface Value {
   String value() default "";
 }
