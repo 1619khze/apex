@@ -15,9 +15,6 @@ import java.lang.reflect.Modifier;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
-import java.util.function.Consumer;
-import java.util.function.Function;
-import java.util.stream.Stream;
 
 /**
  * @author WangYi
@@ -39,6 +36,10 @@ public class JavaBeanDefinitionLoader implements BeanDefinitionLoader {
     this.annotatedElements.add(Configuration.class);
   }
 
+  private Object invoke(Object instants, Method method) throws Throwable {
+    return this.lookup.unreflect(method).bindTo(instants).invokeWithArguments(invokeSoftRef.get());
+  }
+
   protected void registerBeanDefinition(Map<Object, Class<?>> candidateMap) throws Throwable {
     if (Objects.isNull(candidateMap) || candidateMap.isEmpty()) {
       log.info("No candidates were found in the scan");
@@ -49,29 +50,37 @@ public class JavaBeanDefinitionLoader implements BeanDefinitionLoader {
     for (Map.Entry<Object, Class<?>> entry : candidateMap.entrySet()) {
       final Object instants = entry.getKey();
       final Class<?> clazz = entry.getValue();
-      if (clazz.isAnnotationPresent(Configuration.class)) {
-        Method[] declaredMethods = clazz.getDeclaredMethods();
-        if (declaredMethods.length == 0) {
-          continue;
-        }
-        for (Method method : declaredMethods) {
-          if (method.getReturnType() == void.class) {
-            throw new IllegalArgumentException("The return value of the method marked with " +
-                    "Bean annotation in the configuration cannot be " +
-                    "void:{" + instants.getClass().getName() + "}" + "#" + method.getName());
-          }
-          Object object = null;
-          if (method.getParameterCount() == 0) {
-            object = invoke(instants, method);
-          }
-          if (Objects.isNull(object)) {
-            continue;
-          }
-          this.registerBeanDefinition(object, object.getClass());
-        }
-      } else {
-        this.registerBeanDefinition(instants, clazz);
+      registerConfigurationBean(instants, clazz);
+    }
+  }
+
+  private void registerConfigurationBean(Object instants, Class<?> clazz) throws Throwable {
+    if (clazz.isAnnotationPresent(Configuration.class)) {
+      Method[] declaredMethods = clazz.getDeclaredMethods();
+      if (declaredMethods.length == 0) {
+        return;
       }
+      registerConfigurationBean(instants, declaredMethods);
+    } else {
+      this.registerBeanDefinition(instants, clazz);
+    }
+  }
+
+  private void registerConfigurationBean(Object instants, Method[] declaredMethods) throws Throwable {
+    for (Method method : declaredMethods) {
+      if (method.getReturnType() == void.class) {
+        throw new IllegalArgumentException("The return value of the method marked with " +
+                "Bean annotation in the configuration cannot be " +
+                "void:{" + instants.getClass().getName() + "}" + "#" + method.getName());
+      }
+      Object object = null;
+      if (method.getParameterCount() == 0) {
+        object = invoke(instants, method);
+      }
+      if (Objects.isNull(object)) {
+        continue;
+      }
+      this.registerBeanDefinition(object, object.getClass());
     }
   }
 
@@ -81,10 +90,6 @@ public class JavaBeanDefinitionLoader implements BeanDefinitionLoader {
       log.debug("The beans that have completed the " +
               "Bean Definition construction are:{}", beanDefinition.getName());
     this.registerBeanDefinition(beanDefinition);
-  }
-
-  private Object invoke(Object instants, Method method) throws Throwable {
-    return this.lookup.unreflect(method).bindTo(instants).invokeWithArguments(invokeSoftRef.get());
   }
 
   private void registerBeanDefinition(BeanDefinition beanDefinition) {
