@@ -78,11 +78,10 @@ public final class Apex {
 
       final ClassInfoList allClasses = scanResult.getAllClasses();
       final List<Class<?>> classes = allClasses.loadClasses();
-      final Map<String, BeanDefinition> beanDefinitionMap
-              = this.beanDefinitionLoader.load(classes);
 
+      final Map<String, BeanDefinition> beanDefinitionMap = this.beanDefinitionLoader.load(classes);
       this.apexContext.init(beanDefinitionMap);
-    } catch (Exception e) {
+    } catch (Throwable e) {
       log.error("Bean resolve be exception:", e);
     }
     return apexContext;

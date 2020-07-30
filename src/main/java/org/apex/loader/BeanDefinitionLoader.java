@@ -29,5 +29,5 @@ import java.util.List;
 import java.util.Map;
 
 public interface BeanDefinitionLoader {
-  Map<String, BeanDefinition> load(List<Class<?>> classList);
+  Map<String, BeanDefinition> load(List<Class<?>> classList) throws Throwable;
 }

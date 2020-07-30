@@ -9,11 +9,15 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Singleton;
 import java.lang.annotation.Annotation;
 import java.lang.invoke.MethodHandles;
+import java.lang.ref.SoftReference;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.stream.Stream;
 
 /**
  * @author WangYi
@@ -25,14 +29,17 @@ public class JavaBeanDefinitionLoader implements BeanDefinitionLoader {
   protected final Map<String, BeanDefinition> beanDefinitionMap = new ConcurrentHashMap<>(64);
   protected final List<Class<? extends Annotation>> annotatedElements = new ArrayList<>();
   protected final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
+
   private final MethodHandles.Lookup lookup = MethodHandles.lookup();
+  private final Object[] EMPTY = new Object[]{};
+  private final SoftReference<Object[]> invokeSoftRef = new SoftReference<>(EMPTY);
 
   public JavaBeanDefinitionLoader() {
     this.annotatedElements.add(Singleton.class);
     this.annotatedElements.add(Configuration.class);
   }
 
-  protected void registerBeanDefinition(Map<Object, Class<?>> candidateMap) {
+  protected void registerBeanDefinition(Map<Object, Class<?>> candidateMap) throws Throwable {
     if (Objects.isNull(candidateMap) || candidateMap.isEmpty()) {
       log.info("No candidates were found in the scan");
     }
@@ -48,7 +55,15 @@ public class JavaBeanDefinitionLoader implements BeanDefinitionLoader {
           continue;
         }
         for (Method method : declaredMethods) {
-          Object object = invokeMethod(instants, method);
+          if (method.getReturnType() == void.class) {
+            throw new IllegalArgumentException("The return value of the method marked with " +
+                    "Bean annotation in the configuration cannot be " +
+                    "void:{" + instants.getClass().getName() + "}" + "#" + method.getName());
+          }
+          Object object = null;
+          if (method.getParameterCount() == 0) {
+            object = invoke(instants, method);
+          }
           if (Objects.isNull(object)) {
             continue;
           }
@@ -68,19 +83,8 @@ public class JavaBeanDefinitionLoader implements BeanDefinitionLoader {
     this.registerBeanDefinition(beanDefinition);
   }
 
-  private Object invokeMethod(Object instants, Method method) {
-    try {
-      if (method.getReturnType() == void.class) {
-        throw new IllegalArgumentException("The return value of the method marked with " +
-                "Bean annotation in the configuration cannot be " +
-                "void:{" + instants.getClass().getName() + "}" + "#" + method.getName());
-      }
-      Object[] EMPTY = new Object[]{};
-      return this.lookup.unreflect(method).bindTo(instants).invokeWithArguments(EMPTY);
-    } catch (Throwable throwable) {
-      log.error("An exception occurred when MethodHandler invoke a method ", throwable);
-      return null;
-    }
+  private Object invoke(Object instants, Method method) throws Throwable {
+    return this.lookup.unreflect(method).bindTo(instants).invokeWithArguments(invokeSoftRef.get());
   }
 
   private void registerBeanDefinition(BeanDefinition beanDefinition) {
@@ -134,7 +138,7 @@ public class JavaBeanDefinitionLoader implements BeanDefinitionLoader {
   }
 
   @Override
-  public Map<String, BeanDefinition> load(List<Class<?>> classList) {
+  public Map<String, BeanDefinition> load(List<Class<?>> classList) throws Throwable {
     final List<Class<?>> collection = new ArrayList<>();
 
     for (Class<?> cls : classList) {
