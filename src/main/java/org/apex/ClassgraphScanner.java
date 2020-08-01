@@ -43,7 +43,7 @@ public final class ClassgraphScanner implements Scanner {
   }
 
   @Override
-  public ScanResult discover(String scanPackageName) {
+  public ScanResult scan(String scanPackageName) {
     this.classGraph.enableAllInfo();
     if (classgraphOptions != null) {
       this.scanPackages(classgraphOptions.getScanPackages(), scanPackageName)

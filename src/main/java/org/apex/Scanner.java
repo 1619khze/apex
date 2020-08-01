@@ -27,5 +27,5 @@ import io.github.classgraph.ScanResult;
 
 @FunctionalInterface
 public interface Scanner {
-  ScanResult discover(String scanPath);
+  ScanResult scan(String scanPath);
 }

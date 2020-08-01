@@ -73,7 +73,7 @@ public final class Apex {
   private final ApexContext apexContext = ApexContext.of();
 
   public ApexContext apexContext() {
-    try (ScanResult scanResult = scanner.discover(scanPath)) {
+    try (ScanResult scanResult = scanner.scan(scanPath)) {
       this.loadConfig(mainArgs);
 
       final ClassInfoList allClasses = scanResult.getAllClasses();
