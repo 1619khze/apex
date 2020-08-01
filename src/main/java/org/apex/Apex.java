@@ -34,10 +34,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.StringReader;
 import java.util.*;
-import java.util.concurrent.Executor;
-import java.util.concurrent.ForkJoinPool;
-import java.util.concurrent.RejectedExecutionException;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.*;
 
 import static java.util.Objects.requireNonNull;
 import static org.apex.Const.*;
@@ -72,19 +69,40 @@ public final class Apex {
 
   private final ApexContext apexContext = ApexContext.of();
 
+  /**
+   * Get Apex context
+   * @return ApexContext
+   */
   public ApexContext apexContext() {
-    try (ScanResult scanResult = scanner.scan(scanPath)) {
-      this.loadConfig(mainArgs);
+    try {
+      final List<Class<?>> classes = loadClasses();
+      final Map<String, BeanDefinition> beanDefinitionMap
+              = this.beanDefinitionLoader.load(classes);
 
+      this.loadConfig(mainArgs);
+      this.apexContext.init(beanDefinitionMap);
+    } catch (Throwable e) {
+      log.error("An exception occurred while initializing the context", e);
+    }
+    return apexContext;
+  }
+
+  /**
+   * According to the scan path, all scan results are converted to Class and returned
+   * @return Class<?> List
+   */
+  public List<Class<?>> loadClasses() {
+    List<Class<?>> result = new ArrayList<>();
+    try (ScanResult scanResult = this.scanner.scan(scanPath)) {
       final ClassInfoList allClasses = scanResult.getAllClasses();
       final List<Class<?>> classes = allClasses.loadClasses();
 
-      final Map<String, BeanDefinition> beanDefinitionMap = this.beanDefinitionLoader.load(classes);
-      this.apexContext.init(beanDefinitionMap);
+      result.addAll(classes);
+      return result;
     } catch (Throwable e) {
       log.error("Bean resolve be exception:", e);
     }
-    return apexContext;
+    return result;
   }
 
   private Apex() {}
