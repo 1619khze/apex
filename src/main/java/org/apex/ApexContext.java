@@ -33,8 +33,7 @@ import java.util.ServiceLoader;
  * @since 2020/6/22
  */
 public class ApexContext extends AbstractApexFactory {
-  private ApexContext() {
-  }
+  private ApexContext() {}
 
   public static ApexContext of() {
     return ApexContextHolder.instance();
