@@ -27,7 +27,7 @@ import org.apex.AbstractApexFactory;
 import org.apex.BeanDefinition;
 import org.apex.BeanDefinitionFactory;
 import org.apex.annotation.Configuration;
-import org.apex.property.ConfigurationProperty;
+import org.apex.annotation.ConfigurationProperty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
