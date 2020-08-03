@@ -38,8 +38,8 @@ public final class ClassgraphOptions implements Options {
     this.enableRealtimeLogging = enableRealtimeLogging;
   }
 
-  public static FastClassgraphScannerConfigBuilder builder() {
-    return new FastClassgraphScannerConfigBuilder();
+  public static Builder builder() {
+    return new Builder();
   }
 
   @Override
@@ -62,28 +62,28 @@ public final class ClassgraphOptions implements Options {
     return skipPackages;
   }
 
-  public static class FastClassgraphScannerConfigBuilder {
+  public static class Builder {
     private Set<String> scanPackages;
     private Set<String> skipPackages;
     private boolean verbose;
     private boolean enableRealtimeLogging;
 
-    public ClassgraphOptions.FastClassgraphScannerConfigBuilder scanPackages(Set<String> scanPackages) {
+    public Builder scanPackages(Set<String> scanPackages) {
       this.scanPackages = scanPackages;
       return this;
     }
 
-    public ClassgraphOptions.FastClassgraphScannerConfigBuilder skipPackages(Set<String> skipPackages) {
+    public Builder skipPackages(Set<String> skipPackages) {
       this.skipPackages = skipPackages;
       return this;
     }
 
-    public ClassgraphOptions.FastClassgraphScannerConfigBuilder verbose(boolean verbose) {
+    public Builder verbose(boolean verbose) {
       this.verbose = verbose;
       return this;
     }
 
-    public ClassgraphOptions.FastClassgraphScannerConfigBuilder realtimeLogging(boolean enableRealtimeLogging) {
+    public Builder realtimeLogging(boolean enableRealtimeLogging) {
       this.enableRealtimeLogging = enableRealtimeLogging;
       return this;
     }
