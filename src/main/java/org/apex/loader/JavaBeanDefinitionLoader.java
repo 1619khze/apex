@@ -25,7 +25,9 @@ package org.apex.loader;
 
 import org.apex.AbstractApexFactory;
 import org.apex.BeanDefinition;
+import org.apex.BeanDefinitionFactory;
 import org.apex.annotation.Configuration;
+import org.apex.property.ConfigurationProperty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -57,6 +59,7 @@ public class JavaBeanDefinitionLoader implements BeanDefinitionLoader {
   public JavaBeanDefinitionLoader() {
     this.annotatedElements.add(Singleton.class);
     this.annotatedElements.add(Configuration.class);
+    this.annotatedElements.add(ConfigurationProperty.class);
   }
 
   private Object invoke(Object instants, Method method) throws Throwable {
@@ -108,7 +111,7 @@ public class JavaBeanDefinitionLoader implements BeanDefinitionLoader {
   }
 
   private void registerBeanDefinition(Object instants, Class<?> clazz) {
-    final BeanDefinition beanDefinition = this.buildBeanDefinition(instants, clazz);
+    final BeanDefinition beanDefinition = BeanDefinitionFactory.createBeanDefinition(instants, clazz);
     if (log.isDebugEnabled())
       log.debug("The beans that have completed the " +
               "Bean Definition construction are:{}", beanDefinition.getName());
@@ -122,18 +125,6 @@ public class JavaBeanDefinitionLoader implements BeanDefinitionLoader {
     } finally {
       this.lock.writeLock().unlock();
     }
-  }
-
-  protected BeanDefinition buildBeanDefinition(Object instants, Class<?> clazz) {
-    final BeanDefinition beanDefinition = new BeanDefinition();
-    beanDefinition.setName(clazz.getName());
-    beanDefinition.setSimpleName(clazz.getSimpleName());
-    beanDefinition.setInstants(instants);
-    beanDefinition.setFields(clazz.getDeclaredFields());
-    beanDefinition.setMethods(clazz.getDeclaredMethods());
-    beanDefinition.setExtendsClass(clazz.getSuperclass());
-    beanDefinition.setImplInterfaces(clazz.getInterfaces());
-    return beanDefinition;
   }
 
   protected Map<Object, Class<?>> filterCandidates(List<Class<?>> collection) {
