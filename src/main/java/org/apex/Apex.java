@@ -55,7 +55,7 @@ public final class Apex {
   /** Current environment and unified environment objects. */
   private String envName = ENV_NAME;
   private Environment environment = new Environment();
-  private BeanDefinitionLoader beanDefinitionLoader = new JavaBeanDefinitionLoader();
+  private BeanDefinitionLoader beanDefinitionLoader;
   private Options options = Apex.buildOptions();
   private Scanner scanner = new ClassgraphScanner(options);
 
@@ -73,7 +73,10 @@ public final class Apex {
    * Get Apex context
    * @return ApexContext
    */
-  public ApexContext apexContext() {
+  public synchronized ApexContext apexContext() {
+    if(Objects.isNull(beanDefinitionLoader)){
+      this.beanDefinitionLoader = new JavaBeanDefinitionLoader();
+    }
     try {
       final List<Class<?>> classes = loadClasses();
       final Map<String, BeanDefinition> beanDefinitionMap
