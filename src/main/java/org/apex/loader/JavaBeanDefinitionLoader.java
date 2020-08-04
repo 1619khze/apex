@@ -174,4 +174,9 @@ public class JavaBeanDefinitionLoader implements BeanDefinitionLoader {
 
     return beanDefinitionMap;
   }
+
+  @Override
+  public void addScanAnnotation(List<Class<? extends Annotation>> annotatedElements) {
+    this.annotatedElements.addAll(annotatedElements);
+  }
 }

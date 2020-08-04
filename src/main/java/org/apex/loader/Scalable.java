@@ -23,11 +23,13 @@
  */
 package org.apex.loader;
 
-import org.apex.BeanDefinition;
-
+import java.lang.annotation.Annotation;
 import java.util.List;
-import java.util.Map;
 
-public interface BeanDefinitionLoader extends Scalable {
-  Map<String, BeanDefinition> load(List<Class<?>> classList) throws Throwable;
+/**
+ * @author WangYi
+ * @since 2020/8/4
+ */
+public interface Scalable {
+  void addScanAnnotation(List<Class<? extends Annotation>> annotatedElements);
 }
