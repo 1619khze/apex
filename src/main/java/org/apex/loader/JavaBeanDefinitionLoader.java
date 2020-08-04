@@ -162,13 +162,11 @@ public class JavaBeanDefinitionLoader implements BeanDefinitionLoader {
 
     for (Class<?> cls : classList) {
       Annotation[] declaredAnnotations = cls.getDeclaredAnnotations();
-      if (declaredAnnotations.length == 0) {
-        continue;
-      }
+      if (declaredAnnotations.length == 0) continue;
       for (Annotation annotation : declaredAnnotations) {
-        if (this.annotatedElements.contains(annotation.annotationType())) {
-          collection.add(cls);
-        }
+        if (this.annotatedElements.contains(annotation.annotationType()))
+          if (collection.contains(cls)) continue;
+        collection.add(cls);
       }
     }
     Map<Object, Class<?>> objectClassMap = this.filterCandidates(collection);
