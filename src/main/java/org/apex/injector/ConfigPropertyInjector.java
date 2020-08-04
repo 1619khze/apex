@@ -28,16 +28,17 @@ import org.apex.Environment;
 import org.apex.annotation.ConfigurationProperty;
 
 import java.lang.reflect.Field;
-import java.util.Map;
+import java.util.*;
 
 /**
  * @author WangYi
  * @since 2020/8/4
  */
 public class ConfigPropertyInjector implements Injector {
+  private final Environment environment = Apex.of().environment();
+
   @Override
   public void inject(Map<String, Object> instanceMapping) throws Exception {
-    final Environment environment = Apex.of().environment();
     for (Map.Entry<String, Object> entry : instanceMapping.entrySet()) {
       final Object obj = entry.getValue();
       final Class<?> ref = obj.getClass();
@@ -45,7 +46,7 @@ public class ConfigPropertyInjector implements Injector {
       if (!ref.isAnnotationPresent(ConfigurationProperty.class)) {
         continue;
       }
-      ConfigurationProperty annotation =
+      final ConfigurationProperty annotation =
               ref.getAnnotation(ConfigurationProperty.class);
 
       final String prefix = annotation.value();
@@ -53,12 +54,63 @@ public class ConfigPropertyInjector implements Injector {
       if (declaredFields.length == 0) {
         return;
       }
-      for (Field field : declaredFields) {
-        String name = prefix + "." + field.getName();
-        Object fieldProperty = environment.getObject(name);
-        field.setAccessible(true);
-        field.set(obj, fieldProperty);
+      this.inject(obj, prefix, declaredFields);
+    }
+  }
+
+  private void inject(Object obj, String prefix, Field[] declaredFields) throws IllegalAccessException {
+    for (Field field : declaredFields) {
+      String name = prefix + "." + field.getName();
+      field.setAccessible(true);
+      Object fieldProperty = null;
+
+      if (field.getType().isAssignableFrom(Map.class)) {
+        fieldProperty = injectMap(environment, name);
+      }
+
+      if (field.getType().isAssignableFrom(List.class)) {
+        fieldProperty = injectList(environment, name);
+      }
+
+      if (Objects.isNull(fieldProperty)) {
+        fieldProperty = environment.getObject(name);
+      }
+      field.set(obj, fieldProperty);
+    }
+  }
+
+  private Object injectList(Environment environment, String name) {
+    Map<String, String> propsMap = environment.toStringMap();
+    final long count = propsMap.keySet().stream()
+            .filter(key -> key.startsWith(name + "[") && key.endsWith("]"))
+            .count();
+
+    final int idx = ((int) count);
+    final List<Object> fieldList = new ArrayList<>(idx);
+    if (propsMap.isEmpty()) {
+      return fieldList;
+    }
+    for (String key : propsMap.keySet()) {
+      if (key.startsWith(name + "[") && key.endsWith("]")) {
+        fieldList.add(propsMap.get(key));
       }
     }
+    return fieldList;
+  }
+
+  private Object injectMap(Environment environment, String name) {
+    final Map<String, Object> fieldMap = new HashMap<>();
+    Map<String, String> propsMap = environment.toStringMap();
+    if (propsMap.isEmpty()) {
+      return fieldMap;
+    }
+    propsMap.keySet().forEach(key -> {
+      if (key.startsWith(name + ".key")) {
+        String replaceKey = key
+                .replace(name + ".", "");
+        fieldMap.put(replaceKey, propsMap.get(key));
+      }
+    });
+    return fieldMap;
   }
 }
