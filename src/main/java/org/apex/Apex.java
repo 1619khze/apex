@@ -56,8 +56,8 @@ public final class Apex {
   private String envName = ENV_NAME;
   private Environment environment = new Environment();
   private BeanDefinitionLoader beanDefinitionLoader;
-  private Options options = Apex.buildOptions();
-  private Scanner scanner = new ClassgraphScanner(options);
+  private Options options;
+  private Scanner scanner;
 
   /** Scan related objects and configuration information. */
   private String scanPath;
@@ -74,8 +74,14 @@ public final class Apex {
    * @return ApexContext
    */
   public synchronized ApexContext apexContext() {
-    if(Objects.isNull(beanDefinitionLoader)){
+    if (Objects.isNull(beanDefinitionLoader)) {
       this.beanDefinitionLoader = new JavaBeanDefinitionLoader();
+    }
+    if (Objects.isNull(this.scanner)) {
+      this.scanner = new ClassgraphScanner(
+              Objects.isNull(this.options) ?
+                      Apex.buildOptions() : this.options
+      );
     }
     try {
       final List<Class<?>> classes = loadClasses();
@@ -108,7 +114,8 @@ public final class Apex {
     return result;
   }
 
-  private Apex() {}
+  private Apex() {
+  }
 
   /** Ensures that the argument expression is true. */
   static void requireArgument(boolean expression, String template, Object... args) {
@@ -202,8 +209,8 @@ public final class Apex {
   }
 
   public Apex environment(Environment environment) {
-    requireArgument(this.environment == null, "beanResolver was already set to %s", this.environment);
-    this.environment = requireNonNull(environment);
+    requireArgument(environment == null, "environment can't be null", environment);
+    this.environment = environment;
     return this;
   }
 
