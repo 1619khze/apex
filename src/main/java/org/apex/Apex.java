@@ -46,7 +46,7 @@ public final class Apex {
   /** List of paths to be scanned and ignored. */
   private static final Set<String> skipPaths = new LinkedHashSet<>();
   private static final Set<String> packages = new LinkedHashSet<>();
-  private List<Class<? extends Annotation>> annotatedElements = new ArrayList<>();
+  private final List<Class<? extends Annotation>> annotatedElements = new ArrayList<>();
 
   /** Variables about whether the scan status and environment configuration are enabled. */
   private static final boolean verbose = false;
@@ -118,14 +118,14 @@ public final class Apex {
   }
 
   public Apex addScanAnnotation(List<Class<? extends Annotation>> annotatedElements) {
-    requireArgument(annotatedElements != null, "annotatedElements was already set to %s", annotatedElements);
+    requireArgument(annotatedElements != null, "annotatedElements can't be null");
     this.annotatedElements.addAll(annotatedElements);
     return this;
   }
 
   @SafeVarargs
   public final Apex addScanAnnotation(Class<? extends Annotation>... annotatedElements) {
-    requireArgument(annotatedElements != null, "annotatedElements was already set to %s", annotatedElements);
+    requireArgument(annotatedElements != null, "annotatedElements can't be null");
     Collections.addAll(this.annotatedElements, annotatedElements);
     return this;
   }
