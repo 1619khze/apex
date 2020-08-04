@@ -33,6 +33,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.StringReader;
+import java.lang.annotation.Annotation;
 import java.util.*;
 import java.util.concurrent.*;
 
@@ -45,6 +46,7 @@ public final class Apex {
   /** List of paths to be scanned and ignored. */
   private static final Set<String> skipPaths = new LinkedHashSet<>();
   private static final Set<String> packages = new LinkedHashSet<>();
+  private List<Class<? extends Annotation>> annotatedElements = new ArrayList<>();
 
   /** Variables about whether the scan status and environment configuration are enabled. */
   private static final boolean verbose = false;
@@ -76,6 +78,7 @@ public final class Apex {
   public synchronized ApexContext apexContext() {
     if (Objects.isNull(beanDefinitionLoader)) {
       this.beanDefinitionLoader = new JavaBeanDefinitionLoader();
+      this.beanDefinitionLoader.addScanAnnotation(annotatedElements);
     }
     if (Objects.isNull(this.scanner)) {
       this.scanner = new ClassgraphScanner(
@@ -100,7 +103,7 @@ public final class Apex {
    * According to the scan path, all scan results are converted to Class and returned
    * @return Class<?> List
    */
-  public List<Class<?>> loadClasses() {
+  private List<Class<?>> loadClasses() {
     List<Class<?>> result = new ArrayList<>();
     try (ScanResult scanResult = this.scanner.scan(scanPath)) {
       final ClassInfoList allClasses = scanResult.getAllClasses();
@@ -112,6 +115,19 @@ public final class Apex {
       log.error("Bean resolve be exception:", e);
     }
     return result;
+  }
+
+  public Apex addScanAnnotation(List<Class<? extends Annotation>> annotatedElements) {
+    requireArgument(annotatedElements != null, "annotatedElements was already set to %s", annotatedElements);
+    this.annotatedElements.addAll(annotatedElements);
+    return this;
+  }
+
+  @SafeVarargs
+  public final Apex addScanAnnotation(Class<? extends Annotation>... annotatedElements) {
+    requireArgument(annotatedElements != null, "annotatedElements was already set to %s", annotatedElements);
+    Collections.addAll(this.annotatedElements, annotatedElements);
+    return this;
   }
 
   private Apex() {

@@ -23,6 +23,11 @@
  */
 package org.apex;
 
+import org.apex.injector.Injector;
+
+import java.util.Map;
+import java.util.ServiceLoader;
+
 /**
  * @author WangYi
  * @since 2020/6/22
@@ -38,6 +43,17 @@ public class ApexContext extends AbstractApexFactory {
     private static final ApexContext instance = new ApexContext();
     private static ApexContext instance() {
       return instance;
+    }
+  }
+
+  void init(Map<String, BeanDefinition> beanDefinitionMap) throws Exception {
+    this.beanDefinitions.putAll(beanDefinitionMap);
+    for (Map.Entry<String, BeanDefinition> entry : beanDefinitions.entrySet()) {
+      this.instanceMapping.put(entry.getKey(), entry.getValue().getInstants());
+    }
+    ServiceLoader<Injector> injectors = ServiceLoader.load(Injector.class);
+    for (final Injector next : injectors) {
+      next.inject(instanceMapping);
     }
   }
 }

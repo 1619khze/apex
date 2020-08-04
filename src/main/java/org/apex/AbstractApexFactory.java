@@ -23,14 +23,12 @@
  */
 package org.apex;
 
-import org.apex.injector.Injector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.ServiceLoader;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -42,11 +40,15 @@ import static java.util.Objects.requireNonNull;
  * @since 2020/6/22
  */
 @SuppressWarnings("unchecked")
-public class AbstractApexFactory implements ApexFactory, ContextInitialize {
+public class AbstractApexFactory implements ApexFactory {
   private static final Logger log = LoggerFactory.getLogger(AbstractApexFactory.class);
 
   protected final Map<String, BeanDefinition> beanDefinitions = new ConcurrentHashMap<>(64);
   protected final Map<String, Object> instanceMapping = new ConcurrentHashMap<>();
+
+  public Map<String, Object> getInstances() {
+    return instanceMapping;
+  }
 
   private final ReadWriteLock reentrantLock = new ReentrantReadWriteLock();
 
@@ -146,18 +148,6 @@ public class AbstractApexFactory implements ApexFactory, ContextInitialize {
       this.beanDefinitions.remove(beanName);
     } finally {
       reentrantLock.writeLock().unlock();
-    }
-  }
-
-  @Override
-  public void init(Map<String, BeanDefinition> beanDefinitionMap) throws Exception {
-    this.beanDefinitions.putAll(beanDefinitionMap);
-    for (Map.Entry<String, BeanDefinition> entry : beanDefinitions.entrySet()) {
-      this.instanceMapping.put(entry.getKey(), entry.getValue().getInstants());
-    }
-    ServiceLoader<Injector> injectors = ServiceLoader.load(Injector.class);
-    for (final Injector next : injectors) {
-      next.inject(instanceMapping);
     }
   }
 }
