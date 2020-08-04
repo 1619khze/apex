@@ -36,7 +36,7 @@ public class ApexContext extends AbstractApexFactory {
 
   private static class ApexContextHolder {
     private static final ApexContext instance = new ApexContext();
-    public static ApexContext instance() {
+    private static ApexContext instance() {
       return instance;
     }
   }
