@@ -1,2 +1,3 @@
 org.apex.injector.FieldInjector
 org.apex.injector.FieldValueInjector
+org.apex.injector.ConfigPropertyInjector

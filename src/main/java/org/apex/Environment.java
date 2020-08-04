@@ -83,11 +83,15 @@ public final class Environment {
   }
 
   public String get(String name, String defaultValue) {
-    return Optional.ofNullable(this.properties.getProperty(name)).orElse(defaultValue);
+    return Objects.isNull(this.properties.getProperty(name)) ? defaultValue : String.valueOf(this.properties.get(name));
   }
 
   public Object getObject(String name, String defaultValue) {
-    return Optional.ofNullable(this.properties.get(name)).orElse(defaultValue);
+    return Objects.isNull(this.properties.get(name)) ? defaultValue : this.properties.get(name);
+  }
+
+  public Object getObject(String name) {
+    return this.properties.get(name);
   }
 
   public Boolean getBoolean(String name, Boolean defaultValue) {
