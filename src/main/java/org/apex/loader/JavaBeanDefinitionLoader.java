@@ -23,7 +23,6 @@
  */
 package org.apex.loader;
 
-import org.apex.AbstractApexFactory;
 import org.apex.BeanDefinition;
 import org.apex.BeanDefinitionFactory;
 import org.apex.annotation.Configuration;
@@ -46,7 +45,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  * @since 2020/7/24
  */
 public class JavaBeanDefinitionLoader implements BeanDefinitionLoader {
-  private static final Logger log = LoggerFactory.getLogger(AbstractApexFactory.class);
+  private static final Logger log = LoggerFactory.getLogger(JavaBeanDefinitionLoader.class);
 
   protected final Map<String, BeanDefinition> beanDefinitionMap = new ConcurrentHashMap<>(64);
   protected final List<Class<? extends Annotation>> annotatedElements = new ArrayList<>();
@@ -69,8 +68,6 @@ public class JavaBeanDefinitionLoader implements BeanDefinitionLoader {
   protected void registerBeanDefinition(Map<Object, Class<?>> candidateMap) throws Throwable {
     if (Objects.isNull(candidateMap) || candidateMap.isEmpty()) {
       log.info("No candidates were found in the scan");
-    }
-    if (candidateMap.isEmpty()) {
       return;
     }
     for (Map.Entry<Object, Class<?>> entry : candidateMap.entrySet()) {
