@@ -42,18 +42,15 @@ public class ConfigPropertyInjector implements Injector {
     for (Map.Entry<String, Object> entry : instanceMapping.entrySet()) {
       final Object obj = entry.getValue();
       final Class<?> ref = obj.getClass();
-
-      if (!ref.isAnnotationPresent(ConfigurationProperty.class)) {
+      final Field[] declaredFields = ref.getDeclaredFields();
+      if (!ref.isAnnotationPresent(ConfigurationProperty.class)
+              || declaredFields.length == 0) {
         continue;
       }
-      final ConfigurationProperty annotation =
-              ref.getAnnotation(ConfigurationProperty.class);
+      final ConfigurationProperty annotation = ref.getAnnotation(
+                      ConfigurationProperty.class);
 
       final String prefix = annotation.value();
-      Field[] declaredFields = ref.getDeclaredFields();
-      if (declaredFields.length == 0) {
-        return;
-      }
       this.inject(obj, prefix, declaredFields);
     }
   }
