@@ -117,19 +117,6 @@ public final class Apex {
     return result;
   }
 
-  public Apex addScanAnnotation(List<Class<? extends Annotation>> annotatedElements) {
-    requireArgument(annotatedElements != null, "annotatedElements can't be null");
-    this.annotatedElements.addAll(annotatedElements);
-    return this;
-  }
-
-  @SafeVarargs
-  public final Apex addScanAnnotation(Class<? extends Annotation>... annotatedElements) {
-    requireArgument(annotatedElements != null, "annotatedElements can't be null");
-    Collections.addAll(this.annotatedElements, annotatedElements);
-    return this;
-  }
-
   private Apex() {
   }
 
@@ -239,6 +226,29 @@ public final class Apex {
   public Apex options(Options options) {
     requireArgument(this.options == null, "options was already set to %s", this.options);
     this.options = requireNonNull(options);
+    return this;
+  }
+
+  /**
+   * Configure custom annotations that need to be scanned
+   * @param annotatedElements annotations list
+   * @return this
+   */
+  public Apex addScanAnnotation(List<Class<? extends Annotation>> annotatedElements) {
+    requireArgument(annotatedElements != null, "annotatedElements can't be null");
+    this.annotatedElements.addAll(annotatedElements);
+    return this;
+  }
+
+  /**
+   * Configure custom annotations that need to be scanned
+   * @param annotatedElements annotations array
+   * @return this
+   */
+  @SafeVarargs
+  public final Apex addScanAnnotation(Class<? extends Annotation>... annotatedElements) {
+    requireArgument(annotatedElements != null, "annotatedElements can't be null");
+    Collections.addAll(this.annotatedElements, annotatedElements);
     return this;
   }
 
