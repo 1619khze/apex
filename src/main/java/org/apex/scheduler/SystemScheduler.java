@@ -49,8 +49,11 @@ public enum  SystemScheduler implements Scheduler{
     requireNonNull(unit);
 
     try {
-      Executor scheduler = (Executor) delayedExecutor.invoke(
-              CompletableFuture.class, delay, unit, executor);
+      Executor scheduler = null;
+      if (delayedExecutor != null) {
+        scheduler = (Executor) delayedExecutor.invoke(
+                CompletableFuture.class, delay, unit, executor);
+      }
       return CompletableFuture.runAsync(command, scheduler);
     } catch (IllegalAccessException | InvocationTargetException e) {
       throw new RuntimeException(e);
