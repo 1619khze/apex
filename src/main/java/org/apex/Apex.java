@@ -49,8 +49,8 @@ public final class Apex {
   private final List<Class<? extends Annotation>> annotatedElements = new ArrayList<>();
 
   /** Variables about whether the scan status and environment configuration are enabled. */
-  private static final boolean verbose = false;
-  private static final boolean realtimeLogging = false;
+  private static boolean verbose = false;
+  private static boolean realtimeLogging = false;
   private boolean envConfig = false;
   private boolean masterConfig = false;
 
@@ -152,24 +152,82 @@ public final class Apex {
     return ApexHolder.instance;
   }
 
+  /**
+   * Set Whether to start the detailed scan log of classgraph
+   *
+   * @param verbose Whether to enable detailed scan log
+   * @return Aquiver
+   */
+  public Apex verbose(boolean verbose) {
+    Apex.verbose = verbose;
+    this.environment.add(PATH_SCANNER_VERBOSE, verbose);
+    return this;
+  }
+
+  /**
+   * Get Whether to start the detailed scan log of classgraph
+   *
+   * @return Whether to enable detailed scan log
+   */
   public boolean verbose() {
-    return verbose;
+    return requireNonNull(this.environment.getBoolean(PATH_SCANNER_VERBOSE, verbose));
   }
 
+  /**
+   * Set Whether to enable real-time recording of classgraph
+   *
+   * @param realtimeLogging Whether to enable real-time recording of classgraph
+   * @return Aquiver
+   */
+  public Apex realtimeLogging(boolean realtimeLogging) {
+    Apex.realtimeLogging = realtimeLogging;
+    this.environment.add(PATH_SCANNER_LOGGING, realtimeLogging);
+    return this;
+  }
+
+  /**
+   * Get Whether to enable real-time recording of classgraph
+   *
+   * @return Whether to enable real-time recording of classgraph
+   */
   public boolean realtimeLogging() {
-    return realtimeLogging;
+    return requireNonNull(this.environment.getBoolean(PATH_SCANNER_LOGGING, realtimeLogging));
   }
 
+  /**
+   * Get a unified environment object
+   *
+   * @return environment object
+   */
   public Environment environment() {
     return environment;
   }
 
-  public boolean masterConfig() {
-    return masterConfig;
+  /**
+   * Get environment name
+   *
+   * @return environment name
+   */
+  public String envName() {
+    return requireNonNull(envName);
   }
 
-  public String envName() {
-    return envName;
+  /**
+   * Get environment config load status
+   *
+   * @return environment config load status
+   */
+  public boolean envConfig() {
+    return envConfig;
+  }
+
+  /**
+   * Get master config properties or yaml load status
+   *
+   * @return master config properties or yaml load status
+   */
+  public boolean masterConfig() {
+    return masterConfig;
   }
 
   public Apex mainArgs(String[] mainArgs) {
