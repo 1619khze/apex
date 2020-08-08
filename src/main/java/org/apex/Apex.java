@@ -156,7 +156,7 @@ public final class Apex {
    * Set Whether to start the detailed scan log of classgraph
    *
    * @param verbose Whether to enable detailed scan log
-   * @return Aquiver
+   * @return Apex
    */
   public Apex verbose(boolean verbose) {
     Apex.verbose = verbose;
@@ -177,7 +177,7 @@ public final class Apex {
    * Set Whether to enable real-time recording of classgraph
    *
    * @param realtimeLogging Whether to enable real-time recording of classgraph
-   * @return Aquiver
+   * @return Apex
    */
   public Apex realtimeLogging(boolean realtimeLogging) {
     Apex.realtimeLogging = realtimeLogging;
