@@ -77,7 +77,7 @@ public class ConfigPropertyInjector implements Injector {
   }
 
   private Object injectList(Environment environment, String name) {
-    Map<String, String> propsMap = environment.toStringMap();
+    final Map<String, String> propsMap = environment.toStringMap();
     final long count = propsMap.keySet().stream()
             .filter(key -> key.startsWith(name + "[") && key.endsWith("]"))
             .count();
@@ -87,11 +87,13 @@ public class ConfigPropertyInjector implements Injector {
     if (propsMap.isEmpty()) {
       return fieldList;
     }
+    final Map<String, String> sortMap = new TreeMap<>(String::compareTo);
     for (String key : propsMap.keySet()) {
       if (key.startsWith(name + "[") && key.endsWith("]")) {
-        fieldList.add(propsMap.get(key));
+        sortMap.put(key, propsMap.get(key));
       }
     }
+    fieldList.addAll(sortMap.values());
     return fieldList;
   }
 
