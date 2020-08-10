@@ -41,9 +41,6 @@ public final class Environment {
   private final Properties properties = new Properties();
 
   public Environment() {
-    Properties sysProps = System.getProperties();
-    Set<String> keySet = sysProps.stringPropertyNames();
-    keySet.forEach(key -> properties.put(key, sysProps.getProperty(key)));
   }
 
   public Environment(Properties properties) {
