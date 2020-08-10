@@ -35,7 +35,10 @@ import org.slf4j.LoggerFactory;
 import java.io.StringReader;
 import java.lang.annotation.Annotation;
 import java.util.*;
-import java.util.concurrent.*;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.RejectedExecutionException;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 
 import static java.util.Objects.requireNonNull;
 import static org.apex.Const.*;
@@ -276,7 +279,8 @@ public final class Apex {
   }
 
   public Apex resolver(BeanDefinitionLoader beanDefinitionLoader) {
-    requireArgument(this.beanDefinitionLoader == null, "beanResolver was already set to %s", this.beanDefinitionLoader);
+    requireArgument(this.beanDefinitionLoader == null,
+            "beanDefinitionLoader was already set to %s", this.beanDefinitionLoader);
     this.beanDefinitionLoader = requireNonNull(beanDefinitionLoader);
     return this;
   }
@@ -448,6 +452,35 @@ public final class Apex {
         this.envName = profileName;
       }
     }
+    this.nestedAttributes();
+  }
+
+  /**
+   * Supports nested property functions through ${} in properties
+   * and yaml configuration files
+   */
+  private void nestedAttributes() {
+    final Map<String, Object> nestedMap = new HashMap<>();
+    Map<String, Object> map = this.environment.toMap();
+    for (Map.Entry<String, Object> entry : map.entrySet()) {
+      Object value = entry.getValue();
+      String val = value.toString();
+      if (!val.contains("${") && !val.contains("}")) {
+        continue;
+      }
+      final Set<String> strings = map.keySet();
+      for (String key : strings) {
+        String replaceKey = "${" + key.split("\\.")
+                [key.split("\\.").length - 1] + "}";
+        if (!val.contains(replaceKey)) {
+          continue;
+        }
+        val = val.replace(replaceKey, String.valueOf(map
+                .getOrDefault(key, "")));
+        nestedMap.put(entry.getKey(), val);
+      }
+    }
+    this.environment.addAll(nestedMap);
   }
 
   /**
