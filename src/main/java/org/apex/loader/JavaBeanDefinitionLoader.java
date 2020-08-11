@@ -23,6 +23,7 @@
  */
 package org.apex.loader;
 
+import org.apex.Apex;
 import org.apex.BeanDefinition;
 import org.apex.BeanDefinitionFactory;
 import org.apex.annotation.Configuration;
@@ -70,10 +71,20 @@ public class JavaBeanDefinitionLoader implements BeanDefinitionLoader {
       log.info("No candidates were found in the scan");
       return;
     }
+    final Apex apex = Apex.of();
     for (Map.Entry<Object, Class<?>> entry : candidateMap.entrySet()) {
       final Object instants = entry.getKey();
       final Class<?> clazz = entry.getValue();
-      registerConfigurationBean(instants, clazz);
+      List<TypeFilter> typeFilters = apex.typeFilters();
+      if(typeFilters.isEmpty()){
+        registerConfigurationBean(instants, clazz);
+      }
+      for (TypeFilter typeFilter : typeFilters) {
+        if (!typeFilter.filter(clazz)) {
+          continue;
+        }
+        registerConfigurationBean(instants, clazz);
+      }
     }
   }
 

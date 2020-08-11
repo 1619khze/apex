@@ -27,6 +27,7 @@ import io.github.classgraph.ClassInfoList;
 import io.github.classgraph.ScanResult;
 import org.apex.loader.BeanDefinitionLoader;
 import org.apex.loader.JavaBeanDefinitionLoader;
+import org.apex.loader.TypeFilter;
 import org.apex.scheduler.Scheduler;
 import org.apex.utils.PropertyUtils;
 import org.slf4j.Logger;
@@ -50,6 +51,7 @@ public final class Apex {
   private static final Set<String> skipPaths = new LinkedHashSet<>();
   private static final Set<String> packages = new LinkedHashSet<>();
   private final List<Class<? extends Annotation>> annotatedElements = new ArrayList<>();
+  private final List<TypeFilter> typeFilters = new ArrayList<>();
 
   /** Variables about whether the scan status and environment configuration are enabled. */
   private static boolean verbose = false;
@@ -273,7 +275,7 @@ public final class Apex {
   }
 
   public Apex environment(Environment environment) {
-    requireArgument(environment == null, "environment can't be null", environment);
+    requireArgument(environment != null, "environment can't be null", environment);
     this.environment = environment;
     return this;
   }
@@ -289,6 +291,22 @@ public final class Apex {
     requireArgument(this.options == null, "options was already set to %s", this.options);
     this.options = requireNonNull(options);
     return this;
+  }
+
+  public Apex typeFilter(TypeFilter typeFilter) {
+    requireArgument(typeFilter != null, "typeFilter can't be null");
+    this.typeFilters.add(typeFilter);
+    return this;
+  }
+
+  public Apex typeFilter(List<TypeFilter> typeFilters) {
+    requireArgument(!typeFilters.isEmpty(), "typeFilter list can't be empty");
+    this.typeFilters.addAll(typeFilters);
+    return this;
+  }
+
+  public List<TypeFilter> typeFilters() {
+    return typeFilters;
   }
 
   /**
