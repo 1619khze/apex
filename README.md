@@ -23,8 +23,6 @@ A fully functional and simple dependency injection framework
 
 Create a basic `Maven` or `Gradle` project.
 
-> Do not create a `webapp` project, Aquiver does not require much trouble.
-
 ```git
 git clone https://github.com/AquiverV/apex.git
 
