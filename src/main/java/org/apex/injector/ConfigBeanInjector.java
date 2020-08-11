@@ -26,19 +26,25 @@ package org.apex.injector;
 import org.apex.Apex;
 import org.apex.Environment;
 import org.apex.annotation.ConfigurationProperty;
+import org.apex.injector.type.TypeInjector;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Field;
-import java.util.*;
+import java.util.Map;
+import java.util.Objects;
+import java.util.ServiceLoader;
 
 /**
  * @author WangYi
  * @since 2020/8/4
  */
-public class ConfigPropertyInjector implements Injector {
+public class ConfigBeanInjector implements Injector {
+  private final Logger log = LoggerFactory.getLogger(ConfigBeanInjector.class);
   private final Environment environment = Apex.of().environment();
 
   @Override
-  public void inject(Map<String, Object> instanceMapping) throws Exception {
+  public void inject(Map<String, Object> instanceMapping) {
     for (Map.Entry<String, Object> entry : instanceMapping.entrySet()) {
       final Object obj = entry.getValue();
       final Class<?> ref = obj.getClass();
@@ -48,68 +54,40 @@ public class ConfigPropertyInjector implements Injector {
         continue;
       }
       final ConfigurationProperty annotation = ref.getAnnotation(
-                      ConfigurationProperty.class);
+              ConfigurationProperty.class);
 
       final String prefix = annotation.value();
       this.inject(obj, prefix, declaredFields);
     }
   }
 
-  private void inject(Object obj, String prefix, Field[] declaredFields) throws IllegalAccessException {
+  private void inject(Object obj, String prefix, Field[] declaredFields) {
     for (Field field : declaredFields) {
-      String name = prefix + "." + field.getName();
       field.setAccessible(true);
       Object fieldProperty = null;
 
-      if (field.getType().isAssignableFrom(Map.class)) {
-        fieldProperty = injectMap(environment, name);
-      }
+      String name = prefix + "." + field.getName();
+      final ServiceLoader<TypeInjector> typeInjectors
+              = ServiceLoader.load(TypeInjector.class);
 
-      if (field.getType().isAssignableFrom(List.class)) {
-        fieldProperty = injectList(environment, name);
+      for (TypeInjector typeInjector : typeInjectors) {
+        if (field.getType().equals(typeInjector.getType())) {
+          fieldProperty = typeInjector.inject(environment, name);
+        }
       }
-
       if (Objects.isNull(fieldProperty)) {
         fieldProperty = environment.getObject(name);
       }
+      fieldInject(obj, field, fieldProperty);
+    }
+  }
+
+  private void fieldInject(Object obj, Field field, Object fieldProperty) {
+    try {
       field.set(obj, fieldProperty);
+    } catch (IllegalAccessException e) {
+      log.error("Injection exception, current field: {} " +
+              "injection{} failed", field.getName(), fieldProperty);
     }
-  }
-
-  private Object injectList(Environment environment, String name) {
-    final Map<String, String> propsMap = environment.toStringMap();
-    final long count = propsMap.keySet().stream()
-            .filter(key -> key.startsWith(name + "[") && key.endsWith("]"))
-            .count();
-
-    final int idx = ((int) count);
-    final List<Object> fieldList = new ArrayList<>(idx);
-    if (propsMap.isEmpty()) {
-      return fieldList;
-    }
-    final Map<String, String> sortMap = new TreeMap<>(String::compareTo);
-    for (String key : propsMap.keySet()) {
-      if (key.startsWith(name + "[") && key.endsWith("]")) {
-        sortMap.put(key, propsMap.get(key));
-      }
-    }
-    fieldList.addAll(sortMap.values());
-    return fieldList;
-  }
-
-  private Object injectMap(Environment environment, String name) {
-    final Map<String, Object> fieldMap = new HashMap<>();
-    Map<String, String> propsMap = environment.toStringMap();
-    if (propsMap.isEmpty()) {
-      return fieldMap;
-    }
-    propsMap.keySet().forEach(key -> {
-      if (key.startsWith(name + ".key")) {
-        String replaceKey = key
-                .replace(name + ".", "");
-        fieldMap.put(replaceKey, propsMap.get(key));
-      }
-    });
-    return fieldMap;
   }
 }
