@@ -11,8 +11,6 @@
  </a>
  </p>
 
-A fully functional and simple dependency injection framework
-
 ## Contents
 
 - [Install](#install)
