@@ -445,7 +445,7 @@ public final class Apex {
     this.loadPropsOrYaml(bootConfEnv, constField);
 
     /** Support loading configuration from args array of main function. */
-    if (!requireNonNull(bootConfEnv).isEmpty()) {
+    if (!bootConfEnv.isEmpty()) {
       Map<String, String> bootEnvMap = bootConfEnv.toStringMap();
       Set<Map.Entry<String, String>> entrySet = bootEnvMap.entrySet();
 

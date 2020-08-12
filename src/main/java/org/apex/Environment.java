@@ -29,7 +29,11 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Properties;
+import java.util.Set;
 
 /**
  * @author WangYi
@@ -41,9 +45,17 @@ public final class Environment {
   private final Properties properties = new Properties();
 
   public Environment() {
+    try {
+      this.properties.putAll(System.getProperties());
+      System.setProperties(this.properties);
+    }
+    catch (SecurityException e) {
+      log.error("System Properties can't be read or write", e);
+    }
   }
 
   public Environment(Properties properties) {
+    this();
     this.properties.putAll(toMap(properties));
   }
 
@@ -91,7 +103,7 @@ public final class Environment {
     return this.properties.get(name);
   }
 
-  public Boolean getBoolean(String name, Boolean defaultValue) {
+  public boolean getBoolean(String name, boolean defaultValue) {
     final Object o = this.properties.get(name);
     if (o == null) {
       return defaultValue;
@@ -107,27 +119,27 @@ public final class Environment {
     return o.toString();
   }
 
-  public Integer getInteger(String name, Integer defaultValue) {
+  public int getInt(String name, int defaultValue) {
     final Object o = this.properties.get(name);
     if (o == null) {
       return defaultValue;
     }
-
-    return Integer.valueOf(o.toString());
+    return Integer.parseInt(o.toString());
   }
 
-  public Integer size() {
+  public int size() {
     return this.properties.size();
   }
 
-  public Boolean isEmpty() {
+  public boolean isEmpty() {
     return this.properties.isEmpty();
   }
 
   public void load(Reader reader) {
     try {
       this.properties.load(reader);
-    } catch (IOException e) {
+    }
+    catch (IOException e) {
       log.error("IOException:", e);
     }
   }
@@ -135,7 +147,8 @@ public final class Environment {
   public void load(InputStream inputStream) {
     try {
       this.properties.load(inputStream);
-    } catch (IOException e) {
+    }
+    catch (IOException e) {
       log.error("IOException:", e);
     }
   }
