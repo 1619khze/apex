@@ -23,6 +23,10 @@
  */
 package org.apex.utils;
 
+import org.apex.BeanInstantiationException;
+
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Modifier;
 
 /**
@@ -31,6 +35,34 @@ import java.lang.reflect.Modifier;
  */
 public class ReflectionUtils {
   private ReflectionUtils() {
+  }
+
+  /**
+   * Create a object with default constructor
+   *
+   * @param targetClass
+   *     Target class
+   *
+   * @return a target class object
+   */
+  public static Object newInstance(Class<?> targetClass) {
+    try {
+      final Constructor<?> constructor = targetClass.getConstructor();
+      return constructor.newInstance();
+    }
+    catch (InstantiationException e) {
+      throw new BeanInstantiationException(targetClass + "is  an abstract class", e);
+    }
+    catch (IllegalAccessException e) {
+      throw new BeanInstantiationException("Illegal Access '" + targetClass + "' default constructor", e);
+    }
+    catch (InvocationTargetException e) {
+      throw new BeanInstantiationException("Exception occurred when invoking '"
+                                               + targetClass + "''s default constructor", e);
+    }
+    catch (NoSuchMethodException e) {
+      throw new BeanInstantiationException(targetClass + " didn't have a default constructor", e);
+    }
   }
 
   public static <T> boolean isInterface(Class<T> clazz) {

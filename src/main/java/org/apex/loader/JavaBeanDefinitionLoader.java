@@ -28,18 +28,24 @@ import org.apex.BeanDefinition;
 import org.apex.BeanDefinitionFactory;
 import org.apex.annotation.Configuration;
 import org.apex.annotation.ConfigurationProperty;
+import org.apex.utils.ObjectUtils;
+import org.apex.utils.ReflectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.inject.Singleton;
 import java.lang.annotation.Annotation;
 import java.lang.invoke.MethodHandles;
 import java.lang.ref.SoftReference;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
+
+import javax.inject.Singleton;
 
 /**
  * @author WangYi
@@ -49,17 +55,16 @@ public class JavaBeanDefinitionLoader implements BeanDefinitionLoader {
   private static final Logger log = LoggerFactory.getLogger(JavaBeanDefinitionLoader.class);
 
   protected final Map<String, BeanDefinition> beanDefinitionMap = new ConcurrentHashMap<>(64);
-  protected final List<Class<? extends Annotation>> annotatedElements = new ArrayList<>();
-  protected final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
+  protected final List<Class<? extends Annotation>> candidateAnnotations = new ArrayList<>();
 
   private final MethodHandles.Lookup lookup = MethodHandles.lookup();
-  private final Object[] EMPTY = new Object[]{};
+  private final Object[] EMPTY = new Object[] {};
   private final SoftReference<Object[]> invokeSoftRef = new SoftReference<>(EMPTY);
 
   public JavaBeanDefinitionLoader() {
-    this.annotatedElements.add(Singleton.class);
-    this.annotatedElements.add(Configuration.class);
-    this.annotatedElements.add(ConfigurationProperty.class);
+    this.candidateAnnotations.add(Singleton.class);
+    this.candidateAnnotations.add(Configuration.class);
+    this.candidateAnnotations.add(ConfigurationProperty.class);
   }
 
   private Object invoke(Object instants, Method method) throws Throwable {
@@ -76,7 +81,7 @@ public class JavaBeanDefinitionLoader implements BeanDefinitionLoader {
       final Object instants = entry.getKey();
       final Class<?> clazz = entry.getValue();
       List<TypeFilter> typeFilters = apex.typeFilters();
-      if(typeFilters.isEmpty()){
+      if (typeFilters.isEmpty()) {
         registerConfigurationBean(instants, clazz);
       }
       for (TypeFilter typeFilter : typeFilters) {
@@ -95,7 +100,8 @@ public class JavaBeanDefinitionLoader implements BeanDefinitionLoader {
         return;
       }
       registerConfigurationBean(instants, declaredMethods);
-    } else {
+    }
+    else {
       this.registerBeanDefinition(instants, clazz);
     }
   }
@@ -104,8 +110,8 @@ public class JavaBeanDefinitionLoader implements BeanDefinitionLoader {
     for (Method method : declaredMethods) {
       if (method.getReturnType() == void.class) {
         throw new IllegalArgumentException("The return value of the method marked with " +
-                "Bean annotation in the configuration cannot be " +
-                "void:{" + instants.getClass().getName() + "}" + "#" + method.getName());
+                                               "Bean annotation in the configuration cannot be " +
+                                               "void:{" + instants.getClass().getName() + "}" + "#" + method.getName());
       }
       Object object = null;
       if (method.getParameterCount() == 0) {
@@ -121,18 +127,13 @@ public class JavaBeanDefinitionLoader implements BeanDefinitionLoader {
   private void registerBeanDefinition(Object instants, Class<?> clazz) {
     final BeanDefinition beanDefinition = BeanDefinitionFactory.createBeanDefinition(instants, clazz);
     if (log.isDebugEnabled())
-      log.debug("The beans that have completed the " +
-              "Bean Definition construction are:{}", beanDefinition.getName());
+      log.debug("The beans that have completed the Bean Definition construction are:{}",
+                beanDefinition.getName());
     this.registerBeanDefinition(beanDefinition);
   }
 
   private void registerBeanDefinition(BeanDefinition beanDefinition) {
-    try {
-      this.lock.writeLock().lock();
-      this.beanDefinitionMap.put(beanDefinition.getName(), beanDefinition);
-    } finally {
-      this.lock.writeLock().unlock();
-    }
+    this.beanDefinitionMap.put(beanDefinition.getName(), beanDefinition);
   }
 
   protected Map<Object, Class<?>> filterCandidates(List<Class<?>> collection) {
@@ -143,25 +144,20 @@ public class JavaBeanDefinitionLoader implements BeanDefinitionLoader {
       return !next.isAnnotation() && !next.isEnum() && !Modifier.isAbstract(modifiers);
     }).forEach(next -> {
       if (log.isDebugEnabled()) {
-        log.debug("Classes that currently meet " +
-                "the registration requirements:{}", next.getSimpleName());
+        log.debug("Classes that currently meet the registration requirements:{}",
+                  next.getSimpleName());
       }
-      Object instance = getObject(next);
-      candidates.put(Objects.requireNonNull(instance), next);
+      final Object instance = getObject(next);
+      candidates.put(instance, next);
     });
 
     log.info("A total of {} eligible and registerable beans were scanned", candidates.size());
     log.info("Candidate selection is completed and encapsulated as Bean Definition after being instantiated");
-    return Objects.requireNonNull(candidates);
+    return candidates;
   }
 
   private Object getObject(Class<?> next) {
-    try {
-      return next.newInstance();
-    } catch (InstantiationException | IllegalAccessException e) {
-      log.error("Class New Object Exception", e);
-      return null;
-    }
+    return ReflectionUtils.newInstance(next);
   }
 
   @Override
@@ -170,11 +166,14 @@ public class JavaBeanDefinitionLoader implements BeanDefinitionLoader {
 
     for (Class<?> cls : classList) {
       Annotation[] declaredAnnotations = cls.getDeclaredAnnotations();
-      if (declaredAnnotations.length == 0) continue;
-      for (Annotation annotation : declaredAnnotations) {
-        if (this.annotatedElements.contains(annotation.annotationType()))
-          if (collection.contains(cls)) continue;
-        collection.add(cls);
+      if (ObjectUtils.isNotEmpty(declaredAnnotations)) {
+        for (Annotation annotation : declaredAnnotations) {
+          if (this.candidateAnnotations.contains(annotation.annotationType())
+              && collection.contains(cls)) {
+            continue;
+          }
+          collection.add(cls);
+        }
       }
     }
     Map<Object, Class<?>> objectClassMap = this.filterCandidates(collection);
@@ -185,6 +184,6 @@ public class JavaBeanDefinitionLoader implements BeanDefinitionLoader {
 
   @Override
   public void addScanAnnotation(List<Class<? extends Annotation>> annotatedElements) {
-    this.annotatedElements.addAll(annotatedElements);
+    this.candidateAnnotations.addAll(annotatedElements);
   }
 }
