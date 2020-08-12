@@ -58,7 +58,7 @@ public class JavaBeanDefinitionLoader implements BeanDefinitionLoader {
   protected final List<Class<? extends Annotation>> candidateAnnotations = new ArrayList<>();
 
   private final MethodHandles.Lookup lookup = MethodHandles.lookup();
-  private final Object[] EMPTY = new Object[] {};
+  private final Object[] EMPTY = new Object[0];
   private final SoftReference<Object[]> invokeSoftRef = new SoftReference<>(EMPTY);
 
   public JavaBeanDefinitionLoader() {
