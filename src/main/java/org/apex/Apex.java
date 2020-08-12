@@ -23,8 +23,6 @@
  */
 package org.apex;
 
-import io.github.classgraph.ClassInfoList;
-import io.github.classgraph.ScanResult;
 import org.apex.loader.BeanDefinitionLoader;
 import org.apex.loader.JavaBeanDefinitionLoader;
 import org.apex.loader.TypeFilter;
@@ -40,6 +38,9 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
+
+import io.github.classgraph.ClassInfoList;
+import io.github.classgraph.ScanResult;
 
 import static java.util.Objects.requireNonNull;
 import static org.apex.Const.*;
@@ -78,6 +79,7 @@ public final class Apex {
 
   /**
    * Get Apex context
+   *
    * @return ApexContext
    */
   public synchronized ApexContext apexContext() {
@@ -87,18 +89,18 @@ public final class Apex {
     }
     if (Objects.isNull(this.scanner)) {
       this.scanner = new ClassgraphScanner(
-              Objects.isNull(this.options) ?
-                      Apex.buildOptions() : this.options
+          Objects.isNull(this.options) ?
+              Apex.buildOptions() : this.options
       );
     }
     try {
       final List<Class<?>> classes = loadClasses();
-      final Map<String, BeanDefinition> beanDefinitionMap
-              = this.beanDefinitionLoader.load(classes);
+      final Map<String, BeanDefinition> beanDefinitionMap = this.beanDefinitionLoader.load(classes);
 
       this.loadConfig(mainArgs);
       this.apexContext.init(beanDefinitionMap);
-    } catch (Throwable e) {
+    }
+    catch (Throwable e) {
       log.error("An exception occurred while initializing the context", e);
     }
     return apexContext;
@@ -106,6 +108,7 @@ public final class Apex {
 
   /**
    * According to the scan path, all scan results are converted to Class and returned
+   *
    * @return Class<?> List
    */
   private List<Class<?>> loadClasses() {
@@ -116,10 +119,7 @@ public final class Apex {
 
       result.addAll(classes);
       return result;
-    } catch (Throwable e) {
-      log.error("Bean resolve be exception:", e);
     }
-    return result;
   }
 
   private Apex() {
@@ -160,7 +160,9 @@ public final class Apex {
   /**
    * Set Whether to start the detailed scan log of classgraph
    *
-   * @param verbose Whether to enable detailed scan log
+   * @param verbose
+   *     Whether to enable detailed scan log
+   *
    * @return Apex
    */
   public Apex verbose(boolean verbose) {
@@ -175,13 +177,15 @@ public final class Apex {
    * @return Whether to enable detailed scan log
    */
   public boolean verbose() {
-    return requireNonNull(this.environment.getBoolean(PATH_SCANNER_VERBOSE, verbose));
+    return this.environment.getBoolean(PATH_SCANNER_VERBOSE, verbose);
   }
 
   /**
    * Set Whether to enable real-time recording of classgraph
    *
-   * @param realtimeLogging Whether to enable real-time recording of classgraph
+   * @param realtimeLogging
+   *     Whether to enable real-time recording of classgraph
+   *
    * @return Apex
    */
   public Apex realtimeLogging(boolean realtimeLogging) {
@@ -196,7 +200,7 @@ public final class Apex {
    * @return Whether to enable real-time recording of classgraph
    */
   public boolean realtimeLogging() {
-    return requireNonNull(this.environment.getBoolean(PATH_SCANNER_LOGGING, realtimeLogging));
+    return this.environment.getBoolean(PATH_SCANNER_LOGGING, realtimeLogging);
   }
 
   /**
@@ -282,7 +286,7 @@ public final class Apex {
 
   public Apex resolver(BeanDefinitionLoader beanDefinitionLoader) {
     requireArgument(this.beanDefinitionLoader == null,
-            "beanDefinitionLoader was already set to %s", this.beanDefinitionLoader);
+                    "beanDefinitionLoader was already set to %s", this.beanDefinitionLoader);
     this.beanDefinitionLoader = requireNonNull(beanDefinitionLoader);
     return this;
   }
@@ -311,7 +315,10 @@ public final class Apex {
 
   /**
    * Configure custom annotations that need to be scanned
-   * @param annotatedElements annotations list
+   *
+   * @param annotatedElements
+   *     annotations list
+   *
    * @return this
    */
   public Apex addScanAnnotation(List<Class<? extends Annotation>> annotatedElements) {
@@ -322,7 +329,10 @@ public final class Apex {
 
   /**
    * Configure custom annotations that need to be scanned
-   * @param annotatedElements annotations array
+   *
+   * @param annotatedElements
+   *     annotations array
+   *
    * @return this
    */
   @SafeVarargs
@@ -348,10 +358,14 @@ public final class Apex {
    * <b>Note for Java 9 and later:</b> consider using {@link Scheduler#systemScheduler()} to
    * leverage the dedicated, system-wide scheduling thread.
    *
-   * @param scheduler the scheduler that submits a task to the {@link #executor(Executor)} after a
-   *                  given delay
+   * @param scheduler
+   *     the scheduler that submits a task to the {@link #executor(Executor)} after a
+   *     given delay
+   *
    * @return this {@code Caffeine} instance (for chaining)
-   * @throws NullPointerException if the specified scheduler is null
+   *
+   * @throws NullPointerException
+   *     if the specified scheduler is null
    */
   public Apex scheduler(Scheduler scheduler) {
     requireState(this.scheduler == null, "scheduler was already set to %s", this.scheduler);
@@ -372,9 +386,13 @@ public final class Apex {
    * Beware that configuring a cache with an executor that throws {@link RejectedExecutionException}
    * may experience non-deterministic behavior.
    *
-   * @param executor the executor to use for asynchronous execution
+   * @param executor
+   *     the executor to use for asynchronous execution
+   *
    * @return this {@code Caffeine} instance (for chaining)
-   * @throws NullPointerException if the specified executor is null
+   *
+   * @throws NullPointerException
+   *     if the specified executor is null
    */
   public Apex executor(Executor executor) {
     requireState(this.executor == null, "executor was already set to %s", this.executor);
@@ -399,7 +417,8 @@ public final class Apex {
   public Scheduler getScheduler() {
     if ((scheduler == null) || (scheduler == Scheduler.disabledScheduler())) {
       return Scheduler.disabledScheduler();
-    } else if (scheduler == Scheduler.systemScheduler()) {
+    }
+    else if (scheduler == Scheduler.systemScheduler()) {
       return scheduler;
     }
     return Scheduler.guardedScheduler(scheduler);
@@ -412,11 +431,11 @@ public final class Apex {
    */
   public static ClassgraphOptions buildOptions() {
     return ClassgraphOptions.builder()
-            .verbose(verbose)
-            .scanPackages(packages)
-            .skipPackages(skipPaths)
-            .realtimeLogging(realtimeLogging)
-            .build();
+        .verbose(verbose)
+        .scanPackages(packages)
+        .skipPackages(skipPaths)
+        .realtimeLogging(realtimeLogging)
+        .build();
   }
 
   private static class ApexHolder {
@@ -432,8 +451,11 @@ public final class Apex {
    * configuration from args array of main function Support loading
    * configuration from System.Property
    *
-   * @param args main method args
-   * @throws IllegalAccessException IllegalAccessException
+   * @param args
+   *     main method args
+   *
+   * @throws IllegalAccessException
+   *     IllegalAccessException
    */
   private void loadConfig(String[] args) throws IllegalAccessException {
     String bootConf = environment().get(PATH_SERVER_BOOT_CONFIG, PATH_CONFIG_PROPERTIES);
@@ -450,7 +472,7 @@ public final class Apex {
       Set<Map.Entry<String, String>> entrySet = bootEnvMap.entrySet();
 
       entrySet.forEach(entry -> this.environment
-              .add(entry.getKey(), entry.getValue()));
+          .add(entry.getKey(), entry.getValue()));
 
       this.masterConfig = true;
     }
@@ -465,7 +487,7 @@ public final class Apex {
 
     if (!envConfig) {
       String profileName = this.environment.get(PATH_SERVER_PROFILE);
-      if (Objects.nonNull(profileName) && !"".equals(profileName)) {
+      if (Objects.nonNull(profileName) && !BLANK.equals(profileName)) {
         envConfig(profileName);
         this.envName = profileName;
       }
@@ -479,22 +501,19 @@ public final class Apex {
    */
   private void nestedAttributes() {
     final Map<String, Object> nestedMap = new HashMap<>();
-    Map<String, Object> map = this.environment.toMap();
-    for (Map.Entry<String, Object> entry : map.entrySet()) {
+    Map<String, Object> properties = this.environment.toMap();
+    for (Map.Entry<String, Object> entry : properties.entrySet()) {
       Object value = entry.getValue();
       String val = value.toString();
       if (!val.contains("${") && !val.contains("}")) {
         continue;
       }
-      final Set<String> strings = map.keySet();
-      for (String key : strings) {
-        String replaceKey = "${" + key.split("\\.")
-                [key.split("\\.").length - 1] + "}";
+      for (String key : properties.keySet()) {
+        String replaceKey = "${" + key.split("\\.")[key.split("\\.").length - 1] + "}";
         if (!val.contains(replaceKey)) {
           continue;
         }
-        val = val.replace(replaceKey, String.valueOf(map
-                .getOrDefault(key, "")));
+        val = val.replace(replaceKey, String.valueOf(properties.getOrDefault(key, "")));
         nestedMap.put(entry.getKey(), val);
       }
     }
@@ -504,36 +523,44 @@ public final class Apex {
   /**
    * load properties and yaml
    *
-   * @param bootConfEnv Environment used when the server starts
-   * @param constField  Constant attribute map
+   * @param bootConfEnv
+   *     Environment used when the server starts
+   * @param constField
+   *     Constant attribute map
    */
   private void loadPropsOrYaml(Environment bootConfEnv, Map<String, String> constField) {
     /** Properties are configured by default, and the properties loaded
      * by default are application.properties */
-    constField.keySet().forEach(key ->
-            Optional.ofNullable(System.getProperty(constField.get(key)))
-                    .ifPresent(property -> bootConfEnv.add(key, property)));
+    constField.keySet()
+        .forEach(key ->
+                     Optional.ofNullable(System.getProperty(constField.get(key)))
+                         .ifPresent(property -> bootConfEnv.add(key, property))
+        );
 
     /** If there is no properties configuration, the yaml format is
      * used, and the default yaml loaded is application.yml */
     if (bootConfEnv.isEmpty()) {
       Optional.ofNullable(PropertyUtils.yaml(PATH_CONFIG_YAML))
-              .ifPresent(yamlConfigTreeMap ->
-                      bootConfEnv.load(new StringReader(
-                              PropertyUtils.toProperties(yamlConfigTreeMap))));
+          .ifPresent(yamlConfigTreeMap ->
+                         bootConfEnv.load(
+                             new StringReader(PropertyUtils.toProperties(yamlConfigTreeMap))
+                         )
+          );
     }
   }
 
   /**
    * Load main function parameters, and override if main configuration exists
    *
-   * @param args String parameter array of main method
+   * @param args
+   *     String parameter array of main method
+   *
    * @return Write the parameters to the map and return
    */
   private Map<String, String> loadMainArgs(String[] args) {
     Map<String, String> argsMap = PropertyUtils.parseArgs(args);
     if (argsMap.size() > 0) {
-      log.info("Entered command line:{}", argsMap.toString());
+      log.info("Entered command line:{}", argsMap);
     }
 
     for (Map.Entry<String, String> next : argsMap.entrySet()) {
@@ -542,13 +569,13 @@ public final class Apex {
     return argsMap;
   }
 
-
   /**
    * Load the environment configuration, if it exists in the main
    * configuration, it will be overwritten in the environment
    * configuration
    *
-   * @param envName Environment name
+   * @param envName
+   *     Environment name
    */
   private void envConfig(String envName) {
     String envFileName = "application" + "-" + envName + ".properties";
@@ -559,7 +586,7 @@ public final class Apex {
     }
     if (!customerEnv.isEmpty()) {
       customerEnv.props().forEach((key, value) ->
-              this.environment.add(key.toString(), value));
+                                      this.environment.add(key.toString(), value));
     }
     this.environment.add(PATH_SERVER_PROFILE, envName);
   }

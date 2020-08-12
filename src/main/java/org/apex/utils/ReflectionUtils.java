@@ -45,9 +45,9 @@ public class ReflectionUtils {
    *
    * @return a target class object
    */
-  public static Object newInstance(Class<?> targetClass) {
+  public static <T> T newInstance(Class<T> targetClass) {
     try {
-      final Constructor<?> constructor = targetClass.getConstructor();
+      final Constructor<T> constructor = targetClass.getConstructor();
       return constructor.newInstance();
     }
     catch (InstantiationException e) {

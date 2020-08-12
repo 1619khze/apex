@@ -23,6 +23,7 @@
  */
 package org.apex;
 
+import org.apex.utils.ReflectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,8 +31,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.locks.ReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import static java.util.Objects.requireNonNull;
 
@@ -49,8 +48,6 @@ public class AbstractApexFactory implements ApexFactory {
   public Map<String, Object> getInstances() {
     return instanceMapping;
   }
-
-  private final ReadWriteLock reentrantLock = new ReentrantReadWriteLock();
 
   @Override
   public <T> T getBean(Class<T> cls) {
@@ -77,24 +74,18 @@ public class AbstractApexFactory implements ApexFactory {
   @Override
   public <T> T addBean(Class<T> cls) {
     requireNonNull(cls, "cls must not be null");
-    try {
-      T ref = cls.newInstance();
-      this.instanceMapping.put(cls.getName(), ref);
-      return ref;
-    } catch (ReflectiveOperationException e) {
-      log.error("An exception occurred while creating an instance via reflection", e);
-      return null;
-    }
+    final T ref = ReflectionUtils.newInstance(cls);
+    this.instanceMapping.put(cls.getName(), ref);
+    return ref;
   }
 
   @Override
   public <T> T addBean(String beanName) {
     requireNonNull(beanName, "beanName must not be null");
     try {
-      Class<T> ref = (Class<T>) Class.forName(beanName);
-      requireNonNull(ref, "It cannot be instantiated based on bean name");
-      return addBean(ref);
-    } catch (ClassNotFoundException e) {
+      return addBean((Class<T>) Class.forName(beanName));
+    }
+    catch (ClassNotFoundException e) {
       log.error("An exception occurred while creating an instance via reflection", e);
     }
     return null;
@@ -131,23 +122,13 @@ public class AbstractApexFactory implements ApexFactory {
 
   @Override
   public void removeAll() {
-    reentrantLock.writeLock().lock();
-    try {
-      this.instanceMapping.clear();
-      this.beanDefinitions.clear();
-    } finally {
-      reentrantLock.writeLock().unlock();
-    }
+    this.instanceMapping.clear();
+    this.beanDefinitions.clear();
   }
 
   @Override
   public void removeBean(String beanName) {
-    reentrantLock.writeLock().lock();
-    try {
-      this.instanceMapping.remove(beanName);
-      this.beanDefinitions.remove(beanName);
-    } finally {
-      reentrantLock.writeLock().unlock();
-    }
+    this.instanceMapping.remove(beanName);
+    this.beanDefinitions.remove(beanName);
   }
 }

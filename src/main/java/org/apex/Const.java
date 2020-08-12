@@ -30,6 +30,9 @@ import java.nio.file.Paths;
 import java.util.Objects;
 
 public interface Const {
+
+  String BLANK = "";
+
   String PATH_SERVER_PROFILE = "server.profile";
   String PATH_SERVER_BOOT_CONFIG = "server.boot.conf";
   String PATH_ENV_WATCHER = "server.env.watcher";
