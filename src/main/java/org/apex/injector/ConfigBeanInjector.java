@@ -87,7 +87,7 @@ public class ConfigBeanInjector implements Injector {
       field.set(obj, fieldProperty);
     } catch (IllegalAccessException e) {
       log.error("Injection exception, current field: {} " +
-              "injection{} failed", field.getName(), fieldProperty);
+              "injection {} failed", field.getName(), fieldProperty);
     }
   }
 }
