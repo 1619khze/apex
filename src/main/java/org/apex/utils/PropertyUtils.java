@@ -58,7 +58,7 @@ public final class PropertyUtils {
     final Map<String, String> constArgsMap = new HashMap<>();
     List<Field> fields = Arrays.asList(Const.class.getFields());
     for (Field field : new ArrayList<>(fields)) {
-      if (field.getName().contains(Const.PATH_PREFIX_ROOT)) {
+      if (!field.getName().contains(Const.PATH_PREFIX_ROOT)) {
         continue;
       }
       constArgsMap.put(field.getName(), String.valueOf(field.get(field.getName())));
