@@ -24,6 +24,7 @@
 package example;
 
 import example.bean.User;
+import example.bean.User4;
 import org.apex.Apex;
 import org.apex.ApexContext;
 
@@ -36,6 +37,9 @@ import java.util.List;
 public class ApexRun {
   public static void main(String[] args) {
     ApexContext apexContext = Apex.of().mainArgs(args).packages("example").apexContext();
+
+    User4 user4 = apexContext.addBean(User4.class);
+    System.out.println(user4);
 
     User beanByName = apexContext.getBean(User.class.getName());
     beanByName.user();
