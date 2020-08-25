@@ -29,7 +29,6 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.lang.reflect.Field;
-import java.util.Map;
 import java.util.Objects;
 
 /**
@@ -40,28 +39,26 @@ public class FieldInjector implements Injector {
   private static final Logger log = LoggerFactory.getLogger(FieldInjector.class);
 
   @Override
-  public void inject(Map<String, Object> instanceMapping) {
-    for (Map.Entry<String, Object> entry : instanceMapping.entrySet()) {
-      Field[] fields = entry.getValue().getClass().getDeclaredFields();
-      for (Field field : fields) {
-        if (!field.isAnnotationPresent(Inject.class)) {
-          continue;
+  public void inject(Object obj) {
+    Field[] fields = obj.getClass().getDeclaredFields();
+    for (Field field : fields) {
+      if (!field.isAnnotationPresent(Inject.class)) {
+        continue;
+      }
+      String id = field.getType().getName();
+      Inject inject = field.getAnnotation(Inject.class);
+      if (Objects.nonNull(inject)) {
+        Named named = field.getAnnotation(Named.class);
+        if (Objects.nonNull(named) &&
+                Objects.equals(named.value(), "")) {
+          id = named.value();
         }
-        String id = field.getType().getName();
-        Inject inject = field.getAnnotation(Inject.class);
-        if (Objects.nonNull(inject)) {
-          Named named = field.getAnnotation(Named.class);
-          if (Objects.nonNull(named) &&
-                  Objects.equals(named.value(), "")) {
-            id = named.value();
-          }
-        }
-        field.setAccessible(true);
-        try {
-          field.set(entry.getValue(), instanceMapping.get(id));
-        } catch (IllegalAccessException e) {
-          log.error("An exception occurred while injecting field");
-        }
+      }
+      field.setAccessible(true);
+      try {
+        field.set(obj, this.getInstances().get(id));
+      } catch (IllegalAccessException e) {
+        log.error("An exception occurred while injecting field");
       }
     }
   }

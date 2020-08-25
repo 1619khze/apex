@@ -43,19 +43,18 @@ public class ConfigBeanInjector implements Injector {
   private final Environment environment = Apex.of().environment();
 
   @Override
-  public void inject(Class<?> cls) throws Exception {
-    final Object bean = cls.newInstance();
-    final Field[] declaredFields = cls.getDeclaredFields();
-    if (!cls.isAnnotationPresent(ConfigurationProperty.class)
+  public void inject(Object obj) {
+    final Class<?> ref = obj.getClass();
+    final Field[] declaredFields = ref.getDeclaredFields();
+    if (!ref.isAnnotationPresent(ConfigurationProperty.class)
             || declaredFields.length == 0) {
       return;
     }
-    final ConfigurationProperty annotation =
-            cls.getAnnotation(ConfigurationProperty.class);
+    final ConfigurationProperty annotation = ref.getAnnotation(
+            ConfigurationProperty.class);
 
     final String prefix = annotation.value();
-    this.inject(bean, prefix, declaredFields);
-    this.context().addBean(bean);
+    this.inject(obj, prefix, declaredFields);
   }
 
   private void inject(Object obj, String prefix, Field[] declaredFields) {
@@ -69,7 +68,7 @@ public class ConfigBeanInjector implements Injector {
 
       for (TypeInjector typeInjector : typeInjectors) {
         if (field.getType().equals(typeInjector.getType())) {
-          fieldProperty = typeInjector.inject(environment, name);
+          fieldProperty = typeInjector.inject(name);
         }
       }
       if (Objects.isNull(fieldProperty)) {

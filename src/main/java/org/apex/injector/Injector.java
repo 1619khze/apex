@@ -23,6 +23,8 @@
  */
 package org.apex.injector;
 
+import org.apex.ApexContext;
+
 import java.util.Map;
 
 /**
@@ -30,5 +32,9 @@ import java.util.Map;
  * @since 2020/7/9
  */
 public interface Injector {
-  void inject(Map<String, Object> instanceMapping) throws Exception;
+  void inject(Object obj) throws Exception;
+
+  default Map<String, Object> getInstances() {
+    return ApexContext.of().getInstances();
+  }
 }
