@@ -24,8 +24,8 @@
 package org.apex.loader;
 
 import org.apex.Apex;
-import org.apex.BeanInfo;
-import org.apex.BeanInfoFactory;
+import org.apex.BeanDefinition;
+import org.apex.BeanDefinitionFactory;
 import org.apex.annotation.Configuration;
 import org.apex.annotation.ConfigurationProperty;
 import org.apex.utils.ObjectUtils;
@@ -54,7 +54,7 @@ import javax.inject.Singleton;
 public class JavaBeanDefinitionLoader implements BeanDefinitionLoader {
   private static final Logger log = LoggerFactory.getLogger(JavaBeanDefinitionLoader.class);
 
-  protected final Map<String, BeanInfo> beanDefinitionMap = new ConcurrentHashMap<>(64);
+  protected final Map<String, BeanDefinition> beanDefinitionMap = new ConcurrentHashMap<>(64);
   protected final List<Class<? extends Annotation>> candidateAnnotations = new ArrayList<>();
 
   private final MethodHandles.Lookup lookup = MethodHandles.lookup();
@@ -100,8 +100,7 @@ public class JavaBeanDefinitionLoader implements BeanDefinitionLoader {
         return;
       }
       registerConfigurationBean(instants, declaredMethods);
-    }
-    else {
+    } else {
       this.registerBeanDefinition(instants, clazz);
     }
   }
@@ -110,8 +109,8 @@ public class JavaBeanDefinitionLoader implements BeanDefinitionLoader {
     for (Method method : declaredMethods) {
       if (method.getReturnType() == void.class) {
         throw new IllegalArgumentException("The return value of the method marked with " +
-                                               "Bean annotation in the configuration cannot be " +
-                                               "void:{" + instants.getClass().getName() + "}" + "#" + method.getName());
+                "Bean annotation in the configuration cannot be " +
+                "void:{" + instants.getClass().getName() + "}" + "#" + method.getName());
       }
       Object object = null;
       if (method.getParameterCount() == 0) {
@@ -125,15 +124,15 @@ public class JavaBeanDefinitionLoader implements BeanDefinitionLoader {
   }
 
   private void registerBeanDefinition(Object instants, Class<?> clazz) {
-    final BeanInfo beanInfo = BeanInfoFactory.createBeanDefinition(instants, clazz);
+    final BeanDefinition beanDefinition = BeanDefinitionFactory.createBeanDefinition(instants, clazz);
     if (log.isDebugEnabled())
       log.debug("The beans that have completed the Bean Definition construction are:{}",
-                beanInfo.getName());
-    this.registerBeanDefinition(beanInfo);
+              beanDefinition.getName());
+    this.registerBeanDefinition(beanDefinition);
   }
 
-  private void registerBeanDefinition(BeanInfo beanInfo) {
-    this.beanDefinitionMap.put(beanInfo.getName(), beanInfo);
+  private void registerBeanDefinition(BeanDefinition beanDefinition) {
+    this.beanDefinitionMap.put(beanDefinition.getName(), beanDefinition);
   }
 
   protected Map<Object, Class<?>> filterCandidates(List<Class<?>> collection) {
@@ -145,7 +144,7 @@ public class JavaBeanDefinitionLoader implements BeanDefinitionLoader {
     }).forEach(next -> {
       if (log.isDebugEnabled()) {
         log.debug("Classes that currently meet the registration requirements:{}",
-                  next.getSimpleName());
+                next.getSimpleName());
       }
       final Object instance = getObject(next);
       candidates.put(instance, next);
@@ -161,7 +160,7 @@ public class JavaBeanDefinitionLoader implements BeanDefinitionLoader {
   }
 
   @Override
-  public Map<String, BeanInfo> load(List<Class<?>> classList) throws Throwable {
+  public Map<String, BeanDefinition> load(List<Class<?>> classList) throws Throwable {
     final List<Class<?>> collection = new ArrayList<>();
 
     for (Class<?> cls : classList) {
@@ -169,7 +168,7 @@ public class JavaBeanDefinitionLoader implements BeanDefinitionLoader {
       if (ObjectUtils.isNotEmpty(declaredAnnotations)) {
         for (Annotation annotation : declaredAnnotations) {
           if (this.candidateAnnotations.contains(annotation.annotationType())
-              && collection.contains(cls)) {
+                  && collection.contains(cls)) {
             continue;
           }
           collection.add(cls);

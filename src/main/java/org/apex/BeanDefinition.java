@@ -29,7 +29,7 @@ import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.List;
 
-public final class BeanInfo implements Serializable {
+public final class BeanDefinition implements Serializable {
   private String name;
   private String simpleName;
   private Class<?>[] implInterfaces;

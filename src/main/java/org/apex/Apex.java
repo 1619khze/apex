@@ -95,7 +95,7 @@ public final class Apex {
     }
     try {
       final List<Class<?>> classes = loadClasses();
-      final Map<String, BeanInfo> beanDefinitionMap
+      final Map<String, BeanDefinition> beanDefinitionMap
               = this.beanDefinitionLoader.load(classes);
 
       this.loadConfig(mainArgs);

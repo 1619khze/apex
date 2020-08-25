@@ -42,9 +42,9 @@ public class ApexContext extends AbstractApexFactory {
     private static final ApexContext instance = new ApexContext();
   }
 
-  void init(Map<String, BeanInfo> beanDefinitionMap) throws Exception {
-    this.beanInfoMap.putAll(beanDefinitionMap);
-    for (Map.Entry<String, BeanInfo> entry : beanInfoMap.entrySet()) {
+  void init(Map<String, BeanDefinition> beanDefinitionMap) throws Exception {
+    this.beanDefinitions.putAll(beanDefinitionMap);
+    for (Map.Entry<String, BeanDefinition> entry : beanDefinitions.entrySet()) {
       this.instanceMapping.put(entry.getKey(), entry.getValue().getInstants());
     }
     for (Map.Entry<String, Object> entry : instanceMapping.entrySet()) {

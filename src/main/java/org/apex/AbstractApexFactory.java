@@ -44,7 +44,7 @@ import static java.util.Objects.requireNonNull;
 public abstract class AbstractApexFactory implements ApexFactory {
   private static final Logger log = LoggerFactory.getLogger(AbstractApexFactory.class);
 
-  protected final Map<String, BeanInfo> beanInfoMap = new ConcurrentHashMap<>(64);
+  protected final Map<String, BeanDefinition> beanDefinitions = new ConcurrentHashMap<>(64);
   protected final Map<String, Object> instanceMapping = new ConcurrentHashMap<>();
   protected final ServiceLoader<Injector> injectors = ServiceLoader.load(Injector.class);
 
@@ -149,12 +149,12 @@ public abstract class AbstractApexFactory implements ApexFactory {
   @Override
   public void removeAll() {
     this.instanceMapping.clear();
-    this.beanInfoMap.clear();
+    this.beanDefinitions.clear();
   }
 
   @Override
   public void removeBean(String beanName) {
     this.instanceMapping.remove(beanName);
-    this.beanInfoMap.remove(beanName);
+    this.beanDefinitions.remove(beanName);
   }
 }
