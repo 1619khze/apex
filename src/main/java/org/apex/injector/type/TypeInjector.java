@@ -23,6 +23,7 @@
  */
 package org.apex.injector.type;
 
+import org.apex.Apex;
 import org.apex.Environment;
 
 import java.lang.reflect.Type;
@@ -34,5 +35,9 @@ import java.lang.reflect.Type;
 public interface TypeInjector {
   Type getType();
 
-  Object inject(Environment environment, String name);
+  Object inject(String name);
+
+  default Environment environment() {
+    return Apex.of().environment();
+  }
 }

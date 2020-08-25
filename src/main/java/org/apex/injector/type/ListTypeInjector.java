@@ -23,8 +23,6 @@
  */
 package org.apex.injector.type;
 
-import org.apex.Environment;
-
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
@@ -42,8 +40,8 @@ public class ListTypeInjector implements TypeInjector {
   }
 
   @Override
-  public Object inject(Environment environment, String name) {
-    final Map<String, String> propsMap = environment.toStringMap();
+  public Object inject(String name) {
+    final Map<String, String> propsMap = this.environment().toStringMap();
     final long count = propsMap.keySet().stream()
             .filter(key -> key.startsWith(name + "[") && key.endsWith("]"))
             .count();

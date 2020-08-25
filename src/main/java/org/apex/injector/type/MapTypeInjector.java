@@ -23,8 +23,6 @@
  */
 package org.apex.injector.type;
 
-import org.apex.Environment;
-
 import java.lang.reflect.Type;
 import java.util.HashMap;
 import java.util.Map;
@@ -40,9 +38,9 @@ public class MapTypeInjector implements TypeInjector {
   }
 
   @Override
-  public Object inject(Environment environment, String name) {
+  public Object inject(String name) {
     final Map<String, Object> fieldMap = new HashMap<>();
-    Map<String, String> propsMap = environment.toStringMap();
+    Map<String, String> propsMap = this.environment().toStringMap();
     if (propsMap.isEmpty()) {
       return fieldMap;
     }
