@@ -48,7 +48,6 @@ public class ApexContext extends AbstractApexFactory {
     for (Map.Entry<String, BeanDefinition> entry : beanDefinitions.entrySet()) {
       this.instanceMapping.put(entry.getKey(), entry.getValue().getInstants());
     }
-    ServiceLoader<Injector> injectors = ServiceLoader.load(Injector.class);
     for (Map.Entry<String, Object> entry : instanceMapping.entrySet()) {
       for (final Injector next : injectors) {
         next.inject(entry.getValue());
