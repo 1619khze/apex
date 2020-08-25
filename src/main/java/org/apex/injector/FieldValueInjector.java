@@ -40,7 +40,7 @@ public class FieldValueInjector implements Injector {
   private final Environment environment = Apex.of().environment();
 
   @Override
-  public void inject(Object obj) {
+  public void inject(Object obj) throws IllegalAccessException {
     Field[] fields = obj.getClass().getDeclaredFields();
     if (fields.length == 0) {
       return;
@@ -59,6 +59,7 @@ public class FieldValueInjector implements Injector {
           field.set(obj, environment.getString(key, null));
         } catch (IllegalAccessException e) {
           log.error("An exception occurred while injecting value field");
+          throw e;
         }
       }
     }

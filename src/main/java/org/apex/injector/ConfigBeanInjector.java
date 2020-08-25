@@ -43,28 +43,28 @@ public class ConfigBeanInjector implements Injector {
   private final Environment environment = Apex.of().environment();
 
   @Override
-  public void inject(Object obj) {
+  public void inject(Object obj) throws IllegalAccessException {
     final Class<?> ref = obj.getClass();
     final Field[] declaredFields = ref.getDeclaredFields();
     if (!ref.isAnnotationPresent(ConfigurationProperty.class)
-            || declaredFields.length == 0) {
+        || declaredFields.length == 0) {
       return;
     }
     final ConfigurationProperty annotation = ref.getAnnotation(
-            ConfigurationProperty.class);
+        ConfigurationProperty.class);
 
     final String prefix = annotation.value();
     this.inject(obj, prefix, declaredFields);
   }
 
-  private void inject(Object obj, String prefix, Field[] declaredFields) {
+  private void inject(Object obj, String prefix, Field[] declaredFields) throws IllegalAccessException {
     for (Field field : declaredFields) {
       field.setAccessible(true);
       Object fieldProperty = null;
 
       String name = prefix + "." + field.getName();
       final ServiceLoader<TypeInjector> typeInjectors
-              = ServiceLoader.load(TypeInjector.class);
+          = ServiceLoader.load(TypeInjector.class);
 
       for (TypeInjector typeInjector : typeInjectors) {
         if (field.getType().equals(typeInjector.getType())) {
@@ -78,12 +78,14 @@ public class ConfigBeanInjector implements Injector {
     }
   }
 
-  private void fieldInject(Object obj, Field field, Object fieldProperty) {
+  private void fieldInject(Object obj, Field field, Object fieldProperty) throws IllegalAccessException {
     try {
       field.set(obj, fieldProperty);
-    } catch (IllegalAccessException e) {
+    }
+    catch (IllegalAccessException e) {
       log.error("Injection exception, current field: {} " +
-              "injection {} failed", field.getName(), fieldProperty);
+                    "injection {} failed", field.getName(), fieldProperty);
+      throw e;
     }
   }
 }

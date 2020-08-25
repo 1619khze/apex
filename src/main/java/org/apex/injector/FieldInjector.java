@@ -26,10 +26,11 @@ package org.apex.injector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.inject.Inject;
-import javax.inject.Named;
 import java.lang.reflect.Field;
 import java.util.Objects;
+
+import javax.inject.Inject;
+import javax.inject.Named;
 
 /**
  * @author WangYi
@@ -39,7 +40,7 @@ public class FieldInjector implements Injector {
   private static final Logger log = LoggerFactory.getLogger(FieldInjector.class);
 
   @Override
-  public void inject(Object obj) {
+  public void inject(Object obj) throws IllegalAccessException {
     Field[] fields = obj.getClass().getDeclaredFields();
     for (Field field : fields) {
       if (!field.isAnnotationPresent(Inject.class)) {
@@ -50,15 +51,17 @@ public class FieldInjector implements Injector {
       if (Objects.nonNull(inject)) {
         Named named = field.getAnnotation(Named.class);
         if (Objects.nonNull(named) &&
-                Objects.equals(named.value(), "")) {
+            Objects.equals(named.value(), "")) {
           id = named.value();
         }
       }
       field.setAccessible(true);
       try {
         field.set(obj, this.getInstances().get(id));
-      } catch (IllegalAccessException e) {
+      }
+      catch (IllegalAccessException e) {
         log.error("An exception occurred while injecting field");
+        throw e;
       }
     }
   }

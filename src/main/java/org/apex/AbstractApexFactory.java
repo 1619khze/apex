@@ -46,27 +46,28 @@ public abstract class AbstractApexFactory implements ApexFactory {
 
   protected final Map<String, BeanDefinition> beanDefinitions = new ConcurrentHashMap<>(64);
   protected final Map<String, Object> instanceMapping = new ConcurrentHashMap<>();
+  protected final ServiceLoader<Injector> injectors = ServiceLoader.load(Injector.class);
 
   public Map<String, Object> getInstances() {
     return instanceMapping;
   }
 
-  private <T> T getInjectBean(Class<T> cls) {
+  protected <T> T getInjectBean(Class<T> cls) {
     requireNonNull(cls, "cls must not be null");
     Object o = instanceMapping.get(cls.getName());
     return getInjectBean(cls.isAssignableFrom(o.getClass()) ? cls.cast(o) : (T) o);
   }
 
-  private <T> T getInjectBean(Object obj) {
+  protected <T> T getInjectBean(Object obj) {
     requireNonNull(obj, "obj must not be null");
-    final ServiceLoader<Injector> injectors = ServiceLoader.load(Injector.class);
     try {
       for (final Injector next : injectors) {
         next.inject(obj);
       }
       return (T) obj;
-    } catch (Exception e) {
-      return null;
+    }
+    catch (Exception e) {
+      throw new BeanInstantiationException("obj can't be injected");
     }
   }
 
@@ -84,7 +85,8 @@ public abstract class AbstractApexFactory implements ApexFactory {
     requireNonNull(beanName, "beanName must not be null");
     try {
       return ((T) getBean(Class.forName(beanName)));
-    } catch (ClassNotFoundException e) {
+    }
+    catch (ClassNotFoundException e) {
       return null;
     }
   }
@@ -108,7 +110,8 @@ public abstract class AbstractApexFactory implements ApexFactory {
     requireNonNull(beanName, "beanName must not be null");
     try {
       return addBean((Class<T>) Class.forName(beanName));
-    } catch (ClassNotFoundException e) {
+    }
+    catch (ClassNotFoundException e) {
       log.error("An exception occurred while creating an instance via reflection", e);
     }
     return null;
