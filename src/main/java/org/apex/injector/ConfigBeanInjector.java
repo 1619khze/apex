@@ -31,7 +31,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Field;
-import java.util.Map;
 import java.util.Objects;
 import java.util.ServiceLoader;
 
@@ -44,21 +43,19 @@ public class ConfigBeanInjector implements Injector {
   private final Environment environment = Apex.of().environment();
 
   @Override
-  public void inject(Map<String, Object> instanceMapping) {
-    for (Map.Entry<String, Object> entry : instanceMapping.entrySet()) {
-      final Object obj = entry.getValue();
-      final Class<?> ref = obj.getClass();
-      final Field[] declaredFields = ref.getDeclaredFields();
-      if (!ref.isAnnotationPresent(ConfigurationProperty.class)
-              || declaredFields.length == 0) {
-        continue;
-      }
-      final ConfigurationProperty annotation = ref.getAnnotation(
-              ConfigurationProperty.class);
-
-      final String prefix = annotation.value();
-      this.inject(obj, prefix, declaredFields);
+  public void inject(Class<?> cls) throws Exception {
+    final Object bean = cls.newInstance();
+    final Field[] declaredFields = cls.getDeclaredFields();
+    if (!cls.isAnnotationPresent(ConfigurationProperty.class)
+            || declaredFields.length == 0) {
+      return;
     }
+    final ConfigurationProperty annotation =
+            cls.getAnnotation(ConfigurationProperty.class);
+
+    final String prefix = annotation.value();
+    this.inject(bean, prefix, declaredFields);
+    this.context().addBean(bean);
   }
 
   private void inject(Object obj, String prefix, Field[] declaredFields) {
