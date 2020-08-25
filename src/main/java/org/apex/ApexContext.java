@@ -36,14 +36,11 @@ public class ApexContext extends AbstractApexFactory {
   private ApexContext() {}
 
   public static ApexContext of() {
-    return ApexContextHolder.instance();
+    return ApexContextHolder.instance;
   }
 
   private static class ApexContextHolder {
     private static final ApexContext instance = new ApexContext();
-    private static ApexContext instance() {
-      return instance;
-    }
   }
 
   void init(Map<String, BeanDefinition> beanDefinitionMap) throws Exception {
@@ -52,8 +49,10 @@ public class ApexContext extends AbstractApexFactory {
       this.instanceMapping.put(entry.getKey(), entry.getValue().getInstants());
     }
     ServiceLoader<Injector> injectors = ServiceLoader.load(Injector.class);
-    for (final Injector next : injectors) {
-      next.inject(instanceMapping);
+    for (Map.Entry<String, Object> entry : instanceMapping.entrySet()) {
+      for (final Injector next : injectors) {
+        next.inject(entry.getValue());
+      }
     }
   }
 }

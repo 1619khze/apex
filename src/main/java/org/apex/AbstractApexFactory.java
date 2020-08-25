@@ -23,6 +23,7 @@
  */
 package org.apex;
 
+import org.apex.injector.Injector;
 import org.apex.utils.ReflectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,6 +31,7 @@ import org.slf4j.LoggerFactory;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.ServiceLoader;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static java.util.Objects.requireNonNull;
@@ -39,7 +41,7 @@ import static java.util.Objects.requireNonNull;
  * @since 2020/6/22
  */
 @SuppressWarnings("unchecked")
-public class AbstractApexFactory implements ApexFactory {
+public abstract class AbstractApexFactory implements ApexFactory {
   private static final Logger log = LoggerFactory.getLogger(AbstractApexFactory.class);
 
   protected final Map<String, BeanDefinition> beanDefinitions = new ConcurrentHashMap<>(64);
@@ -49,12 +51,30 @@ public class AbstractApexFactory implements ApexFactory {
     return instanceMapping;
   }
 
+  private <T> T getInjectBean(Class<T> cls) {
+    requireNonNull(cls, "cls must not be null");
+    Object o = instanceMapping.get(cls.getName());
+    return getInjectBean(cls.isAssignableFrom(o.getClass()) ? cls.cast(o) : (T) o);
+  }
+
+  private <T> T getInjectBean(Object obj) {
+    requireNonNull(obj, "obj must not be null");
+    final ServiceLoader<Injector> injectors = ServiceLoader.load(Injector.class);
+    try {
+      for (final Injector next : injectors) {
+        next.inject(obj);
+      }
+      return (T) obj;
+    } catch (Exception e) {
+      return null;
+    }
+  }
+
   @Override
   public <T> T getBean(Class<T> cls) {
     requireNonNull(cls, "cls must not be null");
     if (instanceMapping.containsKey(cls.getName())) {
-      Object o = instanceMapping.get(cls.getName());
-      return cls.isAssignableFrom(o.getClass()) ? cls.cast(o) : (T) o;
+      return this.getInjectBean(cls);
     }
     return null;
   }
@@ -62,12 +82,16 @@ public class AbstractApexFactory implements ApexFactory {
   @Override
   public <T> T getBean(String beanName) {
     requireNonNull(beanName, "beanName must not be null");
-    return ((T) instanceMapping.get(beanName));
+    try {
+      return ((T) getBean(Class.forName(beanName)));
+    } catch (ClassNotFoundException e) {
+      return null;
+    }
   }
 
   @Override
   public <T> T getBean(Object obj) {
-    requireNonNull(obj, "beanName must not be null");
+    requireNonNull(obj, "obj must not be null");
     return ((T) getBean(obj.getClass()));
   }
 
@@ -76,7 +100,7 @@ public class AbstractApexFactory implements ApexFactory {
     requireNonNull(cls, "cls must not be null");
     final T ref = ReflectionUtils.newInstance(cls);
     this.instanceMapping.put(cls.getName(), ref);
-    return ref;
+    return getBean(cls);
   }
 
   @Override
@@ -84,8 +108,7 @@ public class AbstractApexFactory implements ApexFactory {
     requireNonNull(beanName, "beanName must not be null");
     try {
       return addBean((Class<T>) Class.forName(beanName));
-    }
-    catch (ClassNotFoundException e) {
+    } catch (ClassNotFoundException e) {
       log.error("An exception occurred while creating an instance via reflection", e);
     }
     return null;
@@ -111,6 +134,11 @@ public class AbstractApexFactory implements ApexFactory {
       }
     }
     return refs;
+  }
+
+  @Override
+  public <T> T newInstance(Class<T> cls) {
+    return null;
   }
 
   @Override
