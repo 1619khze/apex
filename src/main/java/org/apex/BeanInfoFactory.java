@@ -27,17 +27,17 @@ package org.apex;
  * @author WangYi
  * @since 2020/8/4
  */
-public class BeanDefinitionFactory {
-  public static BeanDefinition createBeanDefinition(Object instants, Class<?> clazz) {
-    final BeanDefinition beanDefinition = new BeanDefinition();
-    beanDefinition.setName(clazz.getName());
-    beanDefinition.setSimpleName(clazz.getSimpleName());
-    beanDefinition.setInstants(instants);
-    beanDefinition.setFields(clazz.getDeclaredFields());
-    beanDefinition.setMethods(clazz.getDeclaredMethods());
-    beanDefinition.setExtendsClass(clazz.getSuperclass());
-    beanDefinition.setImplInterfaces(clazz.getInterfaces());
-    beanDefinition.setRef(clazz);
-    return beanDefinition;
+public class BeanInfoFactory {
+  public static BeanInfo createBeanDefinition(Object instants, Class<?> clazz) {
+    final BeanInfo beanInfo = new BeanInfo();
+    beanInfo.setName(clazz.getName());
+    beanInfo.setSimpleName(clazz.getSimpleName());
+    beanInfo.setInstants(instants);
+    beanInfo.setFields(clazz.getDeclaredFields());
+    beanInfo.setMethods(clazz.getDeclaredMethods());
+    beanInfo.setExtendsClass(clazz.getSuperclass());
+    beanInfo.setImplInterfaces(clazz.getInterfaces());
+    beanInfo.setRef(clazz);
+    return beanInfo;
   }
 }

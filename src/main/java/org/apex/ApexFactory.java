@@ -42,8 +42,6 @@ public interface ApexFactory {
 
   <T> List<T> getBeanByType(Object obj);
 
-  <T> T newInstance(Class<T> cls);
-
   void removeAll();
 
   void removeBean(String beanName);

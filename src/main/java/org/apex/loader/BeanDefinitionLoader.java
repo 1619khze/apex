@@ -23,11 +23,11 @@
  */
 package org.apex.loader;
 
-import org.apex.BeanDefinition;
+import org.apex.BeanInfo;
 
 import java.util.List;
 import java.util.Map;
 
 public interface BeanDefinitionLoader extends Scalable {
-  Map<String, BeanDefinition> load(List<Class<?>> classList) throws Throwable;
+  Map<String, BeanInfo> load(List<Class<?>> classList) throws Throwable;
 }

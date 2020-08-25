@@ -44,7 +44,7 @@ import static java.util.Objects.requireNonNull;
 public abstract class AbstractApexFactory implements ApexFactory {
   private static final Logger log = LoggerFactory.getLogger(AbstractApexFactory.class);
 
-  protected final Map<String, BeanDefinition> beanDefinitions = new ConcurrentHashMap<>(64);
+  protected final Map<String, BeanInfo> beanInfoMap = new ConcurrentHashMap<>(64);
   protected final Map<String, Object> instanceMapping = new ConcurrentHashMap<>();
   protected final ServiceLoader<Injector> injectors = ServiceLoader.load(Injector.class);
 
@@ -140,11 +140,6 @@ public abstract class AbstractApexFactory implements ApexFactory {
   }
 
   @Override
-  public <T> T newInstance(Class<T> cls) {
-    return null;
-  }
-
-  @Override
   public <T> List<T> getBeanByType(Object obj) {
     requireNonNull(obj, "obj must not be null");
     Class<T> ref = (Class<T>) obj.getClass();
@@ -154,12 +149,12 @@ public abstract class AbstractApexFactory implements ApexFactory {
   @Override
   public void removeAll() {
     this.instanceMapping.clear();
-    this.beanDefinitions.clear();
+    this.beanInfoMap.clear();
   }
 
   @Override
   public void removeBean(String beanName) {
     this.instanceMapping.remove(beanName);
-    this.beanDefinitions.remove(beanName);
+    this.beanInfoMap.remove(beanName);
   }
 }

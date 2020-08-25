@@ -24,8 +24,8 @@
 package org.apex.loader;
 
 import org.apex.Apex;
-import org.apex.BeanDefinition;
-import org.apex.BeanDefinitionFactory;
+import org.apex.BeanInfo;
+import org.apex.BeanInfoFactory;
 import org.apex.annotation.Configuration;
 import org.apex.annotation.ConfigurationProperty;
 import org.apex.utils.ObjectUtils;
@@ -54,7 +54,7 @@ import javax.inject.Singleton;
 public class JavaBeanDefinitionLoader implements BeanDefinitionLoader {
   private static final Logger log = LoggerFactory.getLogger(JavaBeanDefinitionLoader.class);
 
-  protected final Map<String, BeanDefinition> beanDefinitionMap = new ConcurrentHashMap<>(64);
+  protected final Map<String, BeanInfo> beanDefinitionMap = new ConcurrentHashMap<>(64);
   protected final List<Class<? extends Annotation>> candidateAnnotations = new ArrayList<>();
 
   private final MethodHandles.Lookup lookup = MethodHandles.lookup();
@@ -125,15 +125,15 @@ public class JavaBeanDefinitionLoader implements BeanDefinitionLoader {
   }
 
   private void registerBeanDefinition(Object instants, Class<?> clazz) {
-    final BeanDefinition beanDefinition = BeanDefinitionFactory.createBeanDefinition(instants, clazz);
+    final BeanInfo beanInfo = BeanInfoFactory.createBeanDefinition(instants, clazz);
     if (log.isDebugEnabled())
       log.debug("The beans that have completed the Bean Definition construction are:{}",
-                beanDefinition.getName());
-    this.registerBeanDefinition(beanDefinition);
+                beanInfo.getName());
+    this.registerBeanDefinition(beanInfo);
   }
 
-  private void registerBeanDefinition(BeanDefinition beanDefinition) {
-    this.beanDefinitionMap.put(beanDefinition.getName(), beanDefinition);
+  private void registerBeanDefinition(BeanInfo beanInfo) {
+    this.beanDefinitionMap.put(beanInfo.getName(), beanInfo);
   }
 
   protected Map<Object, Class<?>> filterCandidates(List<Class<?>> collection) {
@@ -161,7 +161,7 @@ public class JavaBeanDefinitionLoader implements BeanDefinitionLoader {
   }
 
   @Override
-  public Map<String, BeanDefinition> load(List<Class<?>> classList) throws Throwable {
+  public Map<String, BeanInfo> load(List<Class<?>> classList) throws Throwable {
     final List<Class<?>> collection = new ArrayList<>();
 
     for (Class<?> cls : classList) {

@@ -89,18 +89,18 @@ public final class Apex {
     }
     if (Objects.isNull(this.scanner)) {
       this.scanner = new ClassgraphScanner(
-          Objects.isNull(this.options) ?
-              Apex.buildOptions() : this.options
+              Objects.isNull(this.options) ?
+                      Apex.buildOptions() : this.options
       );
     }
     try {
       final List<Class<?>> classes = loadClasses();
-      final Map<String, BeanDefinition> beanDefinitionMap = this.beanDefinitionLoader.load(classes);
+      final Map<String, BeanInfo> beanDefinitionMap
+              = this.beanDefinitionLoader.load(classes);
 
       this.loadConfig(mainArgs);
       this.apexContext.init(beanDefinitionMap);
-    }
-    catch (Throwable e) {
+    } catch (Throwable e) {
       log.error("An exception occurred while initializing the context", e);
     }
     return apexContext;
@@ -286,7 +286,7 @@ public final class Apex {
 
   public Apex resolver(BeanDefinitionLoader beanDefinitionLoader) {
     requireArgument(this.beanDefinitionLoader == null,
-                    "beanDefinitionLoader was already set to %s", this.beanDefinitionLoader);
+            "beanDefinitionLoader was already set to %s", this.beanDefinitionLoader);
     this.beanDefinitionLoader = requireNonNull(beanDefinitionLoader);
     return this;
   }
@@ -417,8 +417,7 @@ public final class Apex {
   public Scheduler getScheduler() {
     if ((scheduler == null) || (scheduler == Scheduler.disabledScheduler())) {
       return Scheduler.disabledScheduler();
-    }
-    else if (scheduler == Scheduler.systemScheduler()) {
+    } else if (scheduler == Scheduler.systemScheduler()) {
       return scheduler;
     }
     return Scheduler.guardedScheduler(scheduler);
@@ -431,11 +430,11 @@ public final class Apex {
    */
   public static ClassgraphOptions buildOptions() {
     return ClassgraphOptions.builder()
-        .verbose(verbose)
-        .scanPackages(packages)
-        .skipPackages(skipPaths)
-        .realtimeLogging(realtimeLogging)
-        .build();
+            .verbose(verbose)
+            .scanPackages(packages)
+            .skipPackages(skipPaths)
+            .realtimeLogging(realtimeLogging)
+            .build();
   }
 
   private static class ApexHolder {
@@ -472,7 +471,7 @@ public final class Apex {
       Set<Map.Entry<String, String>> entrySet = bootEnvMap.entrySet();
 
       entrySet.forEach(entry -> this.environment
-          .add(entry.getKey(), entry.getValue()));
+              .add(entry.getKey(), entry.getValue()));
 
       this.masterConfig = true;
     }
@@ -532,20 +531,20 @@ public final class Apex {
     /** Properties are configured by default, and the properties loaded
      * by default are application.properties */
     constField.keySet()
-        .forEach(key ->
-                     Optional.ofNullable(System.getProperty(constField.get(key)))
-                         .ifPresent(property -> bootConfEnv.add(key, property))
-        );
+            .forEach(key ->
+                    Optional.ofNullable(System.getProperty(constField.get(key)))
+                            .ifPresent(property -> bootConfEnv.add(key, property))
+            );
 
     /** If there is no properties configuration, the yaml format is
      * used, and the default yaml loaded is application.yml */
     if (bootConfEnv.isEmpty()) {
       Optional.ofNullable(PropertyUtils.yaml(PATH_CONFIG_YAML))
-          .ifPresent(yamlConfigTreeMap ->
-                         bootConfEnv.load(
-                             new StringReader(PropertyUtils.toProperties(yamlConfigTreeMap))
-                         )
-          );
+              .ifPresent(yamlConfigTreeMap ->
+                      bootConfEnv.load(
+                              new StringReader(PropertyUtils.toProperties(yamlConfigTreeMap))
+                      )
+              );
     }
   }
 
@@ -586,7 +585,7 @@ public final class Apex {
     }
     if (!customerEnv.isEmpty()) {
       customerEnv.props().forEach((key, value) ->
-                                      this.environment.add(key.toString(), value));
+              this.environment.add(key.toString(), value));
     }
     this.environment.add(PATH_SERVER_PROFILE, envName);
   }
