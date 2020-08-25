@@ -23,11 +23,19 @@
  */
 package org.apex;
 
+import java.util.Objects;
+
 /**
  * @author WangYi
  * @since 2020/8/4
  */
 public class BeanDefinitionFactory {
+
+  public static BeanDefinition createBeanDefinition(Object obj) {
+    Objects.requireNonNull(obj, "obj must not be null");
+    return createBeanDefinition(obj, obj.getClass());
+  }
+
   public static BeanDefinition createBeanDefinition(Object instants, Class<?> clazz) {
     final BeanDefinition beanDefinition = new BeanDefinition();
     beanDefinition.setName(clazz.getName());

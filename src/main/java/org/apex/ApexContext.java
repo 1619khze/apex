@@ -48,9 +48,13 @@ public class ApexContext extends AbstractApexFactory {
       this.instanceMapping.put(entry.getKey(), entry.getValue().getInstants());
     }
     for (Map.Entry<String, Object> entry : instanceMapping.entrySet()) {
-      final BeanDefinition def = this.beanDefinitions.get(entry.getKey());
+      BeanDefinition def = this.beanDefinitions.get(entry.getKey());
+      final Object obj = entry.getValue();
+      if (def == null) {
+        def = BeanDefinitionFactory.createBeanDefinition(obj);
+      }
       for (final Injector next : injectors) {
-        next.inject(entry.getValue(), def);
+        next.inject(obj, def);
       }
     }
   }
