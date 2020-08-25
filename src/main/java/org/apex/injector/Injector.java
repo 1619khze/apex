@@ -36,7 +36,7 @@ import java.util.Map;
 public interface Injector {
 
   default void inject(Object obj) throws Exception {
-    inject(obj, BeanDefinitionFactory.createBeanDefinition(obj, obj.getClass()));
+    inject(obj, BeanDefinitionFactory.createBeanDefinition(obj));
   }
 
   void inject(Object obj, BeanDefinition def) throws Exception;
