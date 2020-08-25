@@ -24,8 +24,10 @@
 package org.apex.injector;
 
 import org.apex.Apex;
+import org.apex.BeanDefinition;
 import org.apex.Environment;
 import org.apex.annotation.Value;
+import org.apex.utils.ObjectUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,9 +42,9 @@ public class FieldValueInjector implements Injector {
   private final Environment environment = Apex.of().environment();
 
   @Override
-  public void inject(Object obj) throws IllegalAccessException {
-    Field[] fields = obj.getClass().getDeclaredFields();
-    if (fields.length == 0) {
+  public void inject(Object obj, BeanDefinition def) throws IllegalAccessException {
+    Field[] fields = def.getFields();
+    if (ObjectUtils.isEmpty(fields)) {
       return;
     }
     for (Field field : fields) {
@@ -53,11 +55,12 @@ public class FieldValueInjector implements Injector {
       String elValue = value.value();
       if (elValue.length() > 0 && elValue.startsWith("${") && elValue.endsWith("}")) {
         final String key = value.value().replace("${", "")
-                .replace("}", "");
+            .replace("}", "");
         field.setAccessible(true);
         try {
           field.set(obj, environment.getString(key, null));
-        } catch (IllegalAccessException e) {
+        }
+        catch (IllegalAccessException e) {
           log.error("An exception occurred while injecting value field");
           throw e;
         }

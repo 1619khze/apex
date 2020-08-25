@@ -26,7 +26,6 @@ package org.apex;
 import org.apex.injector.Injector;
 
 import java.util.Map;
-import java.util.ServiceLoader;
 
 /**
  * @author WangYi
@@ -49,8 +48,9 @@ public class ApexContext extends AbstractApexFactory {
       this.instanceMapping.put(entry.getKey(), entry.getValue().getInstants());
     }
     for (Map.Entry<String, Object> entry : instanceMapping.entrySet()) {
+      final BeanDefinition def = this.beanDefinitions.get(entry.getKey());
       for (final Injector next : injectors) {
-        next.inject(entry.getValue());
+        next.inject(entry.getValue(), def);
       }
     }
   }

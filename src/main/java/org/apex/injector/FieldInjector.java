@@ -23,6 +23,7 @@
  */
 package org.apex.injector;
 
+import org.apex.BeanDefinition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,8 +41,8 @@ public class FieldInjector implements Injector {
   private static final Logger log = LoggerFactory.getLogger(FieldInjector.class);
 
   @Override
-  public void inject(Object obj) throws IllegalAccessException {
-    Field[] fields = obj.getClass().getDeclaredFields();
+  public void inject(Object obj, BeanDefinition def) throws Exception {
+    Field[] fields = def.getFields();
     for (Field field : fields) {
       if (!field.isAnnotationPresent(Inject.class)) {
         continue;

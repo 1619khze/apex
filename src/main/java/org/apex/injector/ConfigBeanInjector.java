@@ -24,9 +24,11 @@
 package org.apex.injector;
 
 import org.apex.Apex;
+import org.apex.BeanDefinition;
 import org.apex.Environment;
 import org.apex.annotation.ConfigurationProperty;
 import org.apex.injector.type.TypeInjector;
+import org.apex.utils.ObjectUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -43,17 +45,15 @@ public class ConfigBeanInjector implements Injector {
   private final Environment environment = Apex.of().environment();
 
   @Override
-  public void inject(Object obj) throws IllegalAccessException {
-    final Class<?> ref = obj.getClass();
-    final Field[] declaredFields = ref.getDeclaredFields();
+  public void inject(Object obj, BeanDefinition def) throws Exception {
+    final Class<?> ref = def.getRef();
+    final Field[] declaredFields = def.getFields();
     if (!ref.isAnnotationPresent(ConfigurationProperty.class)
-        || declaredFields.length == 0) {
+        || ObjectUtils.isEmpty(declaredFields)) {
       return;
     }
-    final ConfigurationProperty annotation = ref.getAnnotation(
-        ConfigurationProperty.class);
-
-    final String prefix = annotation.value();
+    final ConfigurationProperty config = ref.getAnnotation(ConfigurationProperty.class);
+    final String prefix = config.value();
     this.inject(obj, prefix, declaredFields);
   }
 
