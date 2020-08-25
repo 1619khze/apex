@@ -38,6 +38,7 @@ public final class BeanDefinition implements Serializable {
   private Method[] methods;
   private List<Method> initMethod;
   private Object instants;
+  private Class<?> ref;
 
   public String getName() {
     return name;
@@ -103,6 +104,14 @@ public final class BeanDefinition implements Serializable {
     this.instants = instants;
   }
 
+  public Class<?> getRef() {
+    return ref;
+  }
+
+  public void setRef(Class<?> ref) {
+    this.ref = ref;
+  }
+
   @Override
   public String toString() {
     return "BeanDefinition{" +
@@ -114,6 +123,7 @@ public final class BeanDefinition implements Serializable {
             ", methods=" + Arrays.toString(methods) +
             ", initMethod=" + initMethod +
             ", instants=" + instants +
+            ", ref=" + ref +
             '}';
   }
 }

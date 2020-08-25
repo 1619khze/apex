@@ -37,6 +37,7 @@ public class BeanDefinitionFactory {
     beanDefinition.setMethods(clazz.getDeclaredMethods());
     beanDefinition.setExtendsClass(clazz.getSuperclass());
     beanDefinition.setImplInterfaces(clazz.getInterfaces());
+    beanDefinition.setRef(clazz);
     return beanDefinition;
   }
 }
