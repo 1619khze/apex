@@ -75,14 +75,12 @@ public final class Apex {
   private Scheduler scheduler;
   private Executor executor;
 
-  private final ApexContext apexContext = ApexContext.of();
-
   /**
    * Get Apex context
    *
    * @return ApexContext
    */
-  public synchronized ApexContext apexContext() {
+  public synchronized Map<String, BeanDefinition> load() {
     if (Objects.isNull(beanDefinitionLoader)) {
       this.beanDefinitionLoader = new JavaBeanDefinitionLoader();
       this.beanDefinitionLoader.addScanAnnotation(annotatedElements);
@@ -99,11 +97,11 @@ public final class Apex {
               = this.beanDefinitionLoader.load(classes);
 
       this.loadConfig(mainArgs);
-      this.apexContext.init(beanDefinitionMap);
-    } catch (Throwable e) {
+      return beanDefinitionMap;
+    } catch(Throwable e) {
       log.error("An exception occurred while initializing the context", e);
+      return new HashMap<>();
     }
-    return apexContext;
   }
 
   /**
