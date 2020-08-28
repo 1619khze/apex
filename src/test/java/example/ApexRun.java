@@ -27,16 +27,20 @@ import example.bean.User;
 import example.bean.User4;
 import org.apex.Apex;
 import org.apex.ApexContext;
+import org.apex.BeanDefinition;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author WangYi
  * @since 2020/6/22
  */
 public class ApexRun {
-  public static void main(String[] args) {
-    ApexContext apexContext = Apex.of().mainArgs(args).packages("example").apexContext();
+  public static void main(String[] args) throws Exception {
+    Map<String, BeanDefinition> example = Apex.of().mainArgs(args).packages("example").load();
+    ApexContext apexContext = ApexContext.of();
+    apexContext.registerBeanDefinitions(example);
 
     User4 user4 = apexContext.addBean(User4.class);
     System.out.println(user4);
