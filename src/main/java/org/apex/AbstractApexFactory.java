@@ -65,8 +65,7 @@ public abstract class AbstractApexFactory implements ApexFactory {
         next.inject(obj);
       }
       return (T) obj;
-    }
-    catch (Exception e) {
+    } catch(Exception e) {
       throw new BeanInstantiationException("obj can't be injected");
     }
   }
@@ -85,8 +84,7 @@ public abstract class AbstractApexFactory implements ApexFactory {
     requireNonNull(beanName, "beanName must not be null");
     try {
       return ((T) getBean(Class.forName(beanName)));
-    }
-    catch (ClassNotFoundException e) {
+    } catch(ClassNotFoundException e) {
       return null;
     }
   }
@@ -110,8 +108,7 @@ public abstract class AbstractApexFactory implements ApexFactory {
     requireNonNull(beanName, "beanName must not be null");
     try {
       return addBean((Class<T>) Class.forName(beanName));
-    }
-    catch (ClassNotFoundException e) {
+    } catch(ClassNotFoundException e) {
       log.error("An exception occurred while creating an instance via reflection", e);
     }
     return null;
@@ -120,7 +117,8 @@ public abstract class AbstractApexFactory implements ApexFactory {
   @Override
   public <T> T addBean(Object obj) {
     requireNonNull(obj, "obj must not be null");
-    return addBean((Class<T>) obj.getClass());
+    this.instanceMapping.put(obj.getClass().getName(), obj);
+    return getBean(obj);
   }
 
   @Override
