@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2019 1619kHz
+ * Copyright (c) 2020 1619kHz
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -37,19 +37,28 @@ import static java.util.Objects.requireNonNull;
 enum DisabledFuture implements Future<Void> {
   INSTANCE;
 
-  @Override public boolean isDone() {
+  @Override
+  public boolean isDone() {
     return true;
   }
-  @Override public boolean isCancelled() {
+
+  @Override
+  public boolean isCancelled() {
     return false;
   }
-  @Override public boolean cancel(boolean mayInterruptIfRunning) {
+
+  @Override
+  public boolean cancel(boolean mayInterruptIfRunning) {
     return false;
   }
-  @Override public Void get() throws InterruptedException, ExecutionException {
+
+  @Override
+  public Void get() throws InterruptedException, ExecutionException {
     return null;
   }
-  @Override public Void get(long timeout, TimeUnit unit)
+
+  @Override
+  public Void get(long timeout, TimeUnit unit)
           throws InterruptedException, ExecutionException, TimeoutException {
     requireNonNull(unit);
     return null;

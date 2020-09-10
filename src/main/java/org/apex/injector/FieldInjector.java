@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2019 1619kHz
+ * Copyright (c) 2020 1619kHz
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -24,14 +24,13 @@
 package org.apex.injector;
 
 import org.apex.BeanDefinition;
+import org.apex.annotation.Inject;
+import org.apex.annotation.Named;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Field;
 import java.util.Objects;
-
-import javax.inject.Inject;
-import javax.inject.Named;
 
 /**
  * @author WangYi
@@ -52,15 +51,14 @@ public class FieldInjector implements Injector {
       if (Objects.nonNull(inject)) {
         Named named = field.getAnnotation(Named.class);
         if (Objects.nonNull(named) &&
-            Objects.equals(named.value(), "")) {
+                Objects.equals(named.value(), "")) {
           id = named.value();
         }
       }
       field.setAccessible(true);
       try {
         field.set(obj, this.getInstances().get(id));
-      }
-      catch (IllegalAccessException e) {
+      } catch (IllegalAccessException e) {
         log.error("An exception occurred while injecting field");
         throw e;
       }

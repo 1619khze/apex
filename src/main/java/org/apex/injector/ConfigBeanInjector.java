@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2019 1619kHz
+ * Copyright (c) 2020 1619kHz
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -26,7 +26,7 @@ package org.apex.injector;
 import org.apex.Apex;
 import org.apex.BeanDefinition;
 import org.apex.Environment;
-import org.apex.annotation.ConfigurationProperty;
+import org.apex.annotation.PropertyBean;
 import org.apex.injector.type.TypeInjector;
 import org.apex.utils.ObjectUtils;
 import org.slf4j.Logger;
@@ -48,11 +48,11 @@ public class ConfigBeanInjector implements Injector {
   public void inject(Object obj, BeanDefinition def) throws Exception {
     final Class<?> ref = def.getRef();
     final Field[] declaredFields = def.getFields();
-    if (!ref.isAnnotationPresent(ConfigurationProperty.class)
-        || ObjectUtils.isEmpty(declaredFields)) {
+    if (!ref.isAnnotationPresent(PropertyBean.class)
+            || ObjectUtils.isEmpty(declaredFields)) {
       return;
     }
-    final ConfigurationProperty config = ref.getAnnotation(ConfigurationProperty.class);
+    final PropertyBean config = ref.getAnnotation(PropertyBean.class);
     final String prefix = config.value();
     this.inject(obj, prefix, declaredFields);
   }
@@ -64,7 +64,7 @@ public class ConfigBeanInjector implements Injector {
 
       String name = prefix + "." + field.getName();
       final ServiceLoader<TypeInjector> typeInjectors
-          = ServiceLoader.load(TypeInjector.class);
+              = ServiceLoader.load(TypeInjector.class);
 
       for (TypeInjector typeInjector : typeInjectors) {
         if (field.getType().equals(typeInjector.getType())) {
@@ -81,10 +81,9 @@ public class ConfigBeanInjector implements Injector {
   private void fieldInject(Object obj, Field field, Object fieldProperty) throws IllegalAccessException {
     try {
       field.set(obj, fieldProperty);
-    }
-    catch (IllegalAccessException e) {
+    } catch (IllegalAccessException e) {
       log.error("Injection exception, current field: {} " +
-                    "injection {} failed", field.getName(), fieldProperty);
+              "injection {} failed", field.getName(), fieldProperty);
       throw e;
     }
   }

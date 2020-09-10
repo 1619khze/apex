@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2019 1619kHz
+ * Copyright (c) 2020 1619kHz
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -23,6 +23,8 @@
  */
 package org.apex;
 
+import io.github.classgraph.ClassInfoList;
+import io.github.classgraph.ScanResult;
 import org.apex.loader.BeanDefinitionLoader;
 import org.apex.loader.JavaBeanDefinitionLoader;
 import org.apex.loader.TypeFilter;
@@ -39,41 +41,109 @@ import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 
-import io.github.classgraph.ClassInfoList;
-import io.github.classgraph.ScanResult;
-
 import static java.util.Objects.requireNonNull;
 import static org.apex.Const.*;
 
-public final class Apex {
+/**
+ * @author WangYi
+ * @since 2020/9/8
+ */
+public class Apex {
   private static final Logger log = LoggerFactory.getLogger(Apex.class);
 
-  /** List of paths to be scanned and ignored. */
+  /**
+   * List of paths to be scanned and ignored.
+   */
   private static final Set<String> skipPaths = new LinkedHashSet<>();
   private static final Set<String> packages = new LinkedHashSet<>();
-  private final List<Class<? extends Annotation>> annotatedElements = new ArrayList<>();
-  private final List<TypeFilter> typeFilters = new ArrayList<>();
 
-  /** Variables about whether the scan status and environment configuration are enabled. */
+  /**
+   * Variables about whether the scan status and environment configuration are enabled.
+   */
   private static boolean verbose = false;
   private static boolean realtimeLogging = false;
+  private final List<Class<? extends Annotation>> annotatedElements = new ArrayList<>();
+  private final List<TypeFilter> typeFilters = new ArrayList<>();
   private boolean envConfig = false;
   private boolean masterConfig = false;
 
-  /** Current environment and unified environment objects. */
+  /**
+   * Current environment and unified environment objects.
+   */
   private String envName = ENV_NAME;
   private Environment environment = new Environment();
   private BeanDefinitionLoader beanDefinitionLoader;
   private Options options;
   private Scanner scanner;
 
-  /** Scan related objects and configuration information. */
+  /**
+   * Scan related objects and configuration information.
+   */
   private String scanPath;
   private String[] mainArgs;
 
-  /** Cacheable thread pool for running scanning services. */
+  /**
+   * Cacheable thread pool for running scanning services.
+   */
   private Scheduler scheduler;
   private Executor executor;
+
+  private Apex() {
+  }
+
+  /**
+   * Ensures that the argument expression is true.
+   */
+  static void requireArgument(boolean expression, String template, Object... args) {
+    if (!expression) {
+      throw new IllegalArgumentException(String.format(template, args));
+    }
+  }
+
+  /**
+   * Ensures that the argument expression is true.
+   */
+  static void requireArgument(boolean expression) {
+    if (!expression) {
+      throw new IllegalArgumentException();
+    }
+  }
+
+  /**
+   * Ensures that the state expression is true.
+   */
+  static void requireState(boolean expression) {
+    if (!expression) {
+      throw new IllegalStateException();
+    }
+  }
+
+  /**
+   * Ensures that the state expression is true.
+   */
+  static void requireState(boolean expression, String template, Object... args) {
+    if (!expression) {
+      throw new IllegalStateException(String.format(template, args));
+    }
+  }
+
+  public static Apex of() {
+    return ApexHolder.instance;
+  }
+
+  /**
+   * Scan options for building Classgraph
+   *
+   * @return ClassgraphOptions
+   */
+  public static ClassgraphOptions buildOptions() {
+    return ClassgraphOptions.builder()
+            .verbose(verbose)
+            .scanPackages(packages)
+            .skipPackages(skipPaths)
+            .realtimeLogging(realtimeLogging)
+            .build();
+  }
 
   /**
    * Get Apex context
@@ -98,7 +168,7 @@ public final class Apex {
 
       this.loadConfig(mainArgs);
       return beanDefinitionMap;
-    } catch(Throwable e) {
+    } catch (Throwable e) {
       log.error("An exception occurred while initializing the context", e);
       return new HashMap<>();
     }
@@ -120,47 +190,10 @@ public final class Apex {
     }
   }
 
-  private Apex() {
-  }
-
-  /** Ensures that the argument expression is true. */
-  static void requireArgument(boolean expression, String template, Object... args) {
-    if (!expression) {
-      throw new IllegalArgumentException(String.format(template, args));
-    }
-  }
-
-  /** Ensures that the argument expression is true. */
-  static void requireArgument(boolean expression) {
-    if (!expression) {
-      throw new IllegalArgumentException();
-    }
-  }
-
-  /** Ensures that the state expression is true. */
-  static void requireState(boolean expression) {
-    if (!expression) {
-      throw new IllegalStateException();
-    }
-  }
-
-  /** Ensures that the state expression is true. */
-  static void requireState(boolean expression, String template, Object... args) {
-    if (!expression) {
-      throw new IllegalStateException(String.format(template, args));
-    }
-  }
-
-  public static Apex of() {
-    return ApexHolder.instance;
-  }
-
   /**
    * Set Whether to start the detailed scan log of classgraph
    *
-   * @param verbose
-   *     Whether to enable detailed scan log
-   *
+   * @param verbose Whether to enable detailed scan log
    * @return Apex
    */
   public Apex verbose(boolean verbose) {
@@ -181,9 +214,7 @@ public final class Apex {
   /**
    * Set Whether to enable real-time recording of classgraph
    *
-   * @param realtimeLogging
-   *     Whether to enable real-time recording of classgraph
-   *
+   * @param realtimeLogging Whether to enable real-time recording of classgraph
    * @return Apex
    */
   public Apex realtimeLogging(boolean realtimeLogging) {
@@ -314,9 +345,7 @@ public final class Apex {
   /**
    * Configure custom annotations that need to be scanned
    *
-   * @param annotatedElements
-   *     annotations list
-   *
+   * @param annotatedElements annotations list
    * @return this
    */
   public Apex addScanAnnotation(List<Class<? extends Annotation>> annotatedElements) {
@@ -328,9 +357,7 @@ public final class Apex {
   /**
    * Configure custom annotations that need to be scanned
    *
-   * @param annotatedElements
-   *     annotations array
-   *
+   * @param annotatedElements annotations array
    * @return this
    */
   @SafeVarargs
@@ -356,14 +383,10 @@ public final class Apex {
    * <b>Note for Java 9 and later:</b> consider using {@link Scheduler#systemScheduler()} to
    * leverage the dedicated, system-wide scheduling thread.
    *
-   * @param scheduler
-   *     the scheduler that submits a task to the {@link #executor(Executor)} after a
-   *     given delay
-   *
+   * @param scheduler the scheduler that submits a task to the {@link #executor(Executor)} after a
+   *                  given delay
    * @return this {@code Caffeine} instance (for chaining)
-   *
-   * @throws NullPointerException
-   *     if the specified scheduler is null
+   * @throws NullPointerException if the specified scheduler is null
    */
   public Apex scheduler(Scheduler scheduler) {
     requireState(this.scheduler == null, "scheduler was already set to %s", this.scheduler);
@@ -384,13 +407,9 @@ public final class Apex {
    * Beware that configuring a cache with an executor that throws {@link RejectedExecutionException}
    * may experience non-deterministic behavior.
    *
-   * @param executor
-   *     the executor to use for asynchronous execution
-   *
+   * @param executor the executor to use for asynchronous execution
    * @return this {@code Caffeine} instance (for chaining)
-   *
-   * @throws NullPointerException
-   *     if the specified executor is null
+   * @throws NullPointerException if the specified executor is null
    */
   public Apex executor(Executor executor) {
     requireState(this.executor == null, "executor was already set to %s", this.executor);
@@ -422,24 +441,6 @@ public final class Apex {
   }
 
   /**
-   * Scan options for building Classgraph
-   *
-   * @return ClassgraphOptions
-   */
-  public static ClassgraphOptions buildOptions() {
-    return ClassgraphOptions.builder()
-            .verbose(verbose)
-            .scanPackages(packages)
-            .skipPackages(skipPaths)
-            .realtimeLogging(realtimeLogging)
-            .build();
-  }
-
-  private static class ApexHolder {
-    private static final Apex instance = new Apex();
-  }
-
-  /**
    * Load configuration from multiple places between startup services.
    * Support items are: Properties are configured by default, and the
    * properties loaded by default are application.properties If there
@@ -448,11 +449,8 @@ public final class Apex {
    * configuration from args array of main function Support loading
    * configuration from System.Property
    *
-   * @param args
-   *     main method args
-   *
-   * @throws IllegalAccessException
-   *     IllegalAccessException
+   * @param args main method args
+   * @throws IllegalAccessException IllegalAccessException
    */
   private void loadConfig(String[] args) throws IllegalAccessException {
     String bootConf = environment().get(PATH_SERVER_BOOT_CONFIG, PATH_CONFIG_PROPERTIES);
@@ -520,10 +518,8 @@ public final class Apex {
   /**
    * load properties and yaml
    *
-   * @param bootConfEnv
-   *     Environment used when the server starts
-   * @param constField
-   *     Constant attribute map
+   * @param bootConfEnv Environment used when the server starts
+   * @param constField  Constant attribute map
    */
   private void loadPropsOrYaml(Environment bootConfEnv, Map<String, String> constField) {
     /** Properties are configured by default, and the properties loaded
@@ -549,9 +545,7 @@ public final class Apex {
   /**
    * Load main function parameters, and override if main configuration exists
    *
-   * @param args
-   *     String parameter array of main method
-   *
+   * @param args String parameter array of main method
    * @return Write the parameters to the map and return
    */
   private Map<String, String> loadMainArgs(String[] args) {
@@ -571,8 +565,7 @@ public final class Apex {
    * configuration, it will be overwritten in the environment
    * configuration
    *
-   * @param envName
-   *     Environment name
+   * @param envName Environment name
    */
   private void envConfig(String envName) {
     String envFileName = "application" + "-" + envName + ".properties";
@@ -586,5 +579,12 @@ public final class Apex {
               this.environment.add(key.toString(), value));
     }
     this.environment.add(PATH_SERVER_PROFILE, envName);
+  }
+
+  /**
+   * Get Singleton Apex Object
+   */
+  private static class ApexHolder {
+    private static final Apex instance = new Apex();
   }
 }

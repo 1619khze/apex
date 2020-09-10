@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2019 1619kHz
+ * Copyright (c) 2020 1619kHz
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -55,12 +55,11 @@ public class FieldValueInjector implements Injector {
       String elValue = value.value();
       if (elValue.length() > 0 && elValue.startsWith("${") && elValue.endsWith("}")) {
         final String key = value.value().replace("${", "")
-            .replace("}", "");
+                .replace("}", "");
         field.setAccessible(true);
         try {
           field.set(obj, environment.getString(key, null));
-        }
-        catch (IllegalAccessException e) {
+        } catch (IllegalAccessException e) {
           log.error("An exception occurred while injecting value field");
           throw e;
         }

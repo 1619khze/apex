@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2019 1619kHz
+ * Copyright (c) 2020 1619kHz
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -40,27 +40,21 @@ public class ReflectionUtils {
   /**
    * Create a object with default constructor
    *
-   * @param targetClass
-   *     Target class
-   *
+   * @param targetClass Target class
    * @return a target class object
    */
   public static <T> T newInstance(Class<T> targetClass) {
     try {
       final Constructor<T> constructor = targetClass.getConstructor();
       return constructor.newInstance();
-    }
-    catch (InstantiationException e) {
+    } catch (InstantiationException e) {
       throw new BeanInstantiationException(targetClass + "is  an abstract class", e);
-    }
-    catch (IllegalAccessException e) {
+    } catch (IllegalAccessException e) {
       throw new BeanInstantiationException("Illegal Access '" + targetClass + "' default constructor", e);
-    }
-    catch (InvocationTargetException e) {
+    } catch (InvocationTargetException e) {
       throw new BeanInstantiationException("Exception occurred when invoking '"
-                                               + targetClass + "''s default constructor", e);
-    }
-    catch (NoSuchMethodException e) {
+              + targetClass + "''s default constructor", e);
+    } catch (NoSuchMethodException e) {
       throw new BeanInstantiationException(targetClass + " didn't have a default constructor", e);
     }
   }

@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2019 1619kHz
+ * Copyright (c) 2020 1619kHz
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -31,17 +31,6 @@ import java.util.concurrent.*;
  */
 @FunctionalInterface
 public interface Scheduler {
-  /**
-   * Returns a future that will submit the task to the given executor after the given delay.
-   *
-   * @param executor the executor to run the task
-   * @param command  the runnable task to schedule
-   * @param delay    how long to delay, in units of {@code unit}
-   * @param unit     a {@code TimeUnit} determining how to interpret the {@code delay} parameter
-   * @return a scheduled future representing pending completion of the task
-   */
-  Future<?> schedule(Executor executor, Runnable command, long delay, TimeUnit unit);
-
   /**
    * Returns a scheduler that always returns a successfully completed future.
    *
@@ -84,4 +73,15 @@ public interface Scheduler {
   static Scheduler guardedScheduler(Scheduler scheduler) {
     return (scheduler instanceof GuardedScheduler) ? scheduler : new GuardedScheduler(scheduler);
   }
+
+  /**
+   * Returns a future that will submit the task to the given executor after the given delay.
+   *
+   * @param executor the executor to run the task
+   * @param command  the runnable task to schedule
+   * @param delay    how long to delay, in units of {@code unit}
+   * @param unit     a {@code TimeUnit} determining how to interpret the {@code delay} parameter
+   * @return a scheduled future representing pending completion of the task
+   */
+  Future<?> schedule(Executor executor, Runnable command, long delay, TimeUnit unit);
 }

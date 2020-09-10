@@ -16,11 +16,12 @@ import java.lang.reflect.InvocationTargetException;
  */
 @SuppressWarnings("restriction")
 public final class UnsafeAccess {
+  /**
+   * The Unsafe instance.
+   */
+  public static final Unsafe UNSAFE;
   static final String ANDROID = "THE_ONE";
   static final String OPEN_JDK = "theUnsafe";
-
-  /** The Unsafe instance. */
-  public static final Unsafe UNSAFE;
 
   static {
     try {
@@ -30,10 +31,13 @@ public final class UnsafeAccess {
     }
   }
 
+  private UnsafeAccess() {
+  }
+
   /**
    * Returns the location of a given static field.
    *
-   * @param clazz the class containing the field
+   * @param clazz     the class containing the field
    * @param fieldName the name of the field
    * @return the address offset of the field
    */
@@ -65,6 +69,4 @@ public final class UnsafeAccess {
     field.setAccessible(true);
     return (Unsafe) field.get(null);
   }
-
-  private UnsafeAccess() {}
 }

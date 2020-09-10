@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2019 1619kHz
+ * Copyright (c) 2020 1619kHz
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -31,14 +31,7 @@ import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Field;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
-
-import static com.sun.jna.Platform.isWindows;
+import java.util.*;
 
 /**
  * @author WangYi
@@ -74,8 +67,7 @@ public final class PropertyUtils {
       final Object mapValue = entry.getValue();
       if (mapValue instanceof Map) {
         sb.append(toString(String.format("%s.%s", key, mapKey), (Map<String, Object>) map.get(mapKey)));
-      }
-      else {
+      } else {
         sb.append(String.format("%s.%s=%s%n", key, mapKey, mapValue.toString()));
       }
     }
@@ -119,17 +111,15 @@ public final class PropertyUtils {
     if (null == url) {
       File f = new File(PropertyUtils.class.getProtectionDomain().getCodeSource().getLocation().getPath());
       path = f.getPath();
-    }
-    else {
+    } else {
       path = url.getPath();
     }
     try {
-      if (isWindows()) {
+      if (System.getProperties().getProperty("os.name").toLowerCase().contains("win")) {
         return decode(path.replaceFirst("^/(.:/)", "$1"));
       }
       return decode(path);
-    }
-    catch (UnsupportedEncodingException e) {
+    } catch (UnsupportedEncodingException e) {
       return "/";
     }
   }

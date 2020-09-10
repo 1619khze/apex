@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2019 1619kHz
+ * Copyright (c) 2020 1619kHz
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -65,7 +65,7 @@ public abstract class AbstractApexFactory implements ApexFactory {
         next.inject(obj);
       }
       return (T) obj;
-    } catch(Exception e) {
+    } catch (Exception e) {
       throw new BeanInstantiationException("obj can't be injected");
     }
   }
@@ -84,7 +84,7 @@ public abstract class AbstractApexFactory implements ApexFactory {
     requireNonNull(beanName, "beanName must not be null");
     try {
       return ((T) getBean(Class.forName(beanName)));
-    } catch(ClassNotFoundException e) {
+    } catch (ClassNotFoundException e) {
       return null;
     }
   }
@@ -108,7 +108,7 @@ public abstract class AbstractApexFactory implements ApexFactory {
     requireNonNull(beanName, "beanName must not be null");
     try {
       return addBean((Class<T>) Class.forName(beanName));
-    } catch(ClassNotFoundException e) {
+    } catch (ClassNotFoundException e) {
       log.error("An exception occurred while creating an instance via reflection", e);
     }
     return null;

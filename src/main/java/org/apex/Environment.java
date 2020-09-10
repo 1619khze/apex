@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2019 1619kHz
+ * Copyright (c) 2020 1619kHz
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -29,11 +29,7 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Properties;
-import java.util.Set;
+import java.util.*;
 
 /**
  * @author WangYi
@@ -48,8 +44,7 @@ public final class Environment {
     try {
       this.properties.putAll(System.getProperties());
       System.setProperties(this.properties);
-    }
-    catch (SecurityException e) {
+    } catch (SecurityException e) {
       log.error("System Properties can't be read or write", e);
     }
   }
@@ -138,8 +133,7 @@ public final class Environment {
   public void load(Reader reader) {
     try {
       this.properties.load(reader);
-    }
-    catch (IOException e) {
+    } catch (IOException e) {
       log.error("IOException:", e);
     }
   }
@@ -147,8 +141,7 @@ public final class Environment {
   public void load(InputStream inputStream) {
     try {
       this.properties.load(inputStream);
-    }
-    catch (IOException e) {
+    } catch (IOException e) {
       log.error("IOException:", e);
     }
   }

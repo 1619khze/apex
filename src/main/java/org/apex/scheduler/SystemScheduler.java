@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2019 1619kHz
+ * Copyright (c) 2020 1619kHz
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -36,10 +36,23 @@ import static java.util.Objects.requireNonNull;
  * @author WangYi
  * @since 2020/6/23
  */
-public enum  SystemScheduler implements Scheduler{
+public enum SystemScheduler implements Scheduler {
   INSTANCE;
 
   static final Method delayedExecutor = getDelayedExecutorMethod();
+
+  static Method getDelayedExecutorMethod() {
+    try {
+      return CompletableFuture.class.getMethod(
+              "delayedExecutor", long.class, TimeUnit.class, Executor.class);
+    } catch (NoSuchMethodException | SecurityException e) {
+      return null;
+    }
+  }
+
+  static boolean isPresent() {
+    return (delayedExecutor != null);
+  }
 
   @Override
   @SuppressWarnings("NullAway")
@@ -58,18 +71,5 @@ public enum  SystemScheduler implements Scheduler{
     } catch (IllegalAccessException | InvocationTargetException e) {
       throw new RuntimeException(e);
     }
-  }
-
-  static Method getDelayedExecutorMethod() {
-    try {
-      return CompletableFuture.class.getMethod(
-              "delayedExecutor", long.class, TimeUnit.class, Executor.class);
-    } catch (NoSuchMethodException | SecurityException e) {
-      return null;
-    }
-  }
-
-  static boolean isPresent() {
-    return (delayedExecutor != null);
   }
 }

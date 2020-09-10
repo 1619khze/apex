@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2019 1619kHz
+ * Copyright (c) 2020 1619kHz
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -26,8 +26,10 @@ package org.apex.loader;
 import org.apex.Apex;
 import org.apex.BeanDefinition;
 import org.apex.BeanDefinitionFactory;
-import org.apex.annotation.Configuration;
-import org.apex.annotation.ConfigurationProperty;
+import org.apex.annotation.Bean;
+import org.apex.annotation.ConfigBean;
+import org.apex.annotation.PropertyBean;
+import org.apex.annotation.Singleton;
 import org.apex.utils.ObjectUtils;
 import org.apex.utils.ReflectionUtils;
 import org.slf4j.Logger;
@@ -35,17 +37,10 @@ import org.slf4j.LoggerFactory;
 
 import java.lang.annotation.Annotation;
 import java.lang.invoke.MethodHandles;
-import java.lang.ref.SoftReference;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-
-import javax.inject.Singleton;
 
 /**
  * @author WangYi
@@ -58,17 +53,12 @@ public class JavaBeanDefinitionLoader implements BeanDefinitionLoader {
   protected final List<Class<? extends Annotation>> candidateAnnotations = new ArrayList<>();
 
   private final MethodHandles.Lookup lookup = MethodHandles.lookup();
-  private final Object[] EMPTY = new Object[0];
-  private final SoftReference<Object[]> invokeSoftRef = new SoftReference<>(EMPTY);
+  private final Apex apex = Apex.of();
 
   public JavaBeanDefinitionLoader() {
     this.candidateAnnotations.add(Singleton.class);
-    this.candidateAnnotations.add(Configuration.class);
-    this.candidateAnnotations.add(ConfigurationProperty.class);
-  }
-
-  private Object invoke(Object instants, Method method) throws Throwable {
-    return this.lookup.unreflect(method).bindTo(instants).invokeWithArguments(invokeSoftRef.get());
+    this.candidateAnnotations.add(ConfigBean.class);
+    this.candidateAnnotations.add(PropertyBean.class);
   }
 
   protected void registerBeanDefinition(Map<Object, Class<?>> candidateMap) throws Throwable {
@@ -76,7 +66,6 @@ public class JavaBeanDefinitionLoader implements BeanDefinitionLoader {
       log.info("No candidates were found in the scan");
       return;
     }
-    final Apex apex = Apex.of();
     for (Map.Entry<Object, Class<?>> entry : candidateMap.entrySet()) {
       final Object instants = entry.getKey();
       final Class<?> clazz = entry.getValue();
@@ -94,8 +83,8 @@ public class JavaBeanDefinitionLoader implements BeanDefinitionLoader {
   }
 
   private void registerConfigurationBean(Object instants, Class<?> clazz) throws Throwable {
-    if (clazz.isAnnotationPresent(Configuration.class)) {
-      Method[] declaredMethods = clazz.getDeclaredMethods();
+    if (clazz.isAnnotationPresent(ConfigBean.class)) {
+      Method[] declaredMethods = clazz.getMethods();
       if (declaredMethods.length == 0) {
         return;
       }
@@ -107,14 +96,17 @@ public class JavaBeanDefinitionLoader implements BeanDefinitionLoader {
 
   private void registerConfigurationBean(Object instants, Method[] declaredMethods) throws Throwable {
     for (Method method : declaredMethods) {
-      if (method.getReturnType() == void.class) {
+      if (!method.isAnnotationPresent(Bean.class)) {
+        continue;
+      }
+      if (Void.TYPE.isAssignableFrom(method.getReturnType())) {
         throw new IllegalArgumentException("The return value of the method marked with " +
                 "Bean annotation in the configuration cannot be " +
                 "void:{" + instants.getClass().getName() + "}" + "#" + method.getName());
       }
       Object object = null;
       if (method.getParameterCount() == 0) {
-        object = invoke(instants, method);
+        object = this.lookup.unreflect(method).bindTo(instants).invoke();
       }
       if (Objects.isNull(object)) {
         continue;
