@@ -27,11 +27,11 @@ import java.lang.annotation.*;
 
 /**
  * @author WangYi
- * @since 2020/6/30
+ * @since 2020/8/4
  */
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.METHOD)
-public @interface Bean {
-  String value() default "";
+@Target(ElementType.TYPE)
+public @interface PropertyBean {
+  String value();
 }

@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2019 1619kHz
+ * Copyright (c) 2020 1619kHz
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -23,15 +23,30 @@
  */
 package org.apex.annotation;
 
-import java.lang.annotation.*;
+import java.lang.annotation.Documented;
+import java.lang.annotation.Retention;
+
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * @author WangYi
- * @since 2020/6/30
+ * String-based {@linkplain Qualifier qualifier}.
+ *
+ * <p>Example usage:
+ *
+ * <pre>
+ *   public class Car {
+ *     &#064;Inject <b>@Named("driver")</b> Seat driverSeat;
+ *     &#064;Inject <b>@Named("passenger")</b> Seat passengerSeat;
+ *     ...
+ *   }</pre>
  */
+@Qualifier
 @Documented
-@Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.TYPE)
-public @interface Configuration {
+@Retention(RUNTIME)
+public @interface Named {
+
+  /**
+   * The name.
+   */
   String value() default "";
 }

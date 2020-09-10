@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2019 1619kHz
+ * Copyright (c) 2020 1619kHz
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -23,15 +23,18 @@
  */
 package org.apex.annotation;
 
-import java.lang.annotation.*;
+import java.lang.annotation.Documented;
+import java.lang.annotation.Retention;
+
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * @author WangYi
- * @since 2020/8/4
+ * Identifies a type that the injector only instantiates once. Not inherited.
+ *
+ * @see Scope @Scope
  */
+@Scope
 @Documented
-@Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.TYPE)
-public @interface ConfigurationProperty {
-  String value();
+@Retention(RUNTIME)
+public @interface Singleton {
 }
