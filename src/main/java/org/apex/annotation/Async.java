@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2019 1619kHz
+ * Copyright (c) 2020 1619kHz
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -21,7 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package org.apex.async;
+package org.apex.annotation;
 
 import java.lang.annotation.*;
 
