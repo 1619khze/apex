@@ -21,7 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package org.apex;
+package org.apex.env;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,40 +29,39 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Properties;
+import java.util.Set;
 
 /**
  * @author WangYi
  * @since 2019/6/5
  */
-public final class Environment {
+public class Environment extends AbstractEnvironment {
   private static final Logger log = LoggerFactory.getLogger(Environment.class);
 
-  private final Properties properties = new Properties();
-
-  public Environment() {
-    try {
-      this.properties.putAll(System.getProperties());
-      System.setProperties(this.properties);
-    } catch (SecurityException e) {
-      log.error("System Properties can't be read or write", e);
-    }
+  private Environment() {
   }
 
-  public Environment(Properties properties) {
-    this();
+  private Environment(Properties properties) {
     this.properties.putAll(toMap(properties));
   }
 
-  public Environment(String location) {
+  private Environment(String location) {
     this.load(location);
   }
 
-  public static Environment of(Properties properties) {
+  public static Environment create() {
+    return new Environment();
+  }
+
+  public static Environment create(Properties properties) {
     return new Environment(properties);
   }
 
-  public static Environment of(String location) {
+  public static Environment create(String location) {
     return new Environment(location);
   }
 

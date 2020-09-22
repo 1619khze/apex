@@ -21,7 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package org.apex.utils;
+package org.apex.env;
 
 import org.apex.Const;
 import org.yaml.snakeyaml.Yaml;
@@ -31,13 +31,18 @@ import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Field;
 import java.net.URL;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 
 /**
  * @author WangYi
  * @since 2019/6/10
  */
-public final class PropertyUtils {
+public class PropertyHelper {
 
   public static String toProperties(TreeMap<String, Map<String, Object>> config) {
     StringBuilder sb = new StringBuilder();
@@ -94,7 +99,7 @@ public final class PropertyUtils {
     if (!location.startsWith("/")) {
       location = "/" + location;
     }
-    InputStream resourceAsStream = PropertyUtils.class.getResourceAsStream(location);
+    InputStream resourceAsStream = PropertyHelper.class.getResourceAsStream(location);
     if (resourceAsStream == null) {
       return null;
     }
@@ -106,10 +111,10 @@ public final class PropertyUtils {
   }
 
   public static String getCurrentClassPath() {
-    URL url = PropertyUtils.class.getResource("/");
+    URL url = PropertyHelper.class.getResource("/");
     String path;
     if (null == url) {
-      File f = new File(PropertyUtils.class.getProtectionDomain().getCodeSource().getLocation().getPath());
+      File f = new File(PropertyHelper.class.getProtectionDomain().getCodeSource().getLocation().getPath());
       path = f.getPath();
     } else {
       path = url.getPath();
