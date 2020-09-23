@@ -21,46 +21,25 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package org.apex.io;
+package org.apex;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.URI;
-import java.net.URL;
-import java.nio.file.Path;
+import org.apex.beans.KlassInfo;
+
+import java.util.Map;
 
 /**
  * @author WangYi
- * @since 2020/7/23
+ * @since 2020/7/9
  */
-public interface Resource {
-  default ClassLoader getClassLoader() {
-    return Thread.currentThread().getContextClassLoader();
+public interface Injector {
+
+  default void inject(Object obj) throws Exception {
+    inject(obj, KlassInfo.create(obj));
   }
 
-  boolean isExist();
+  void inject(Object obj, KlassInfo klassInfo) throws Exception;
 
-  boolean isFile();
-
-  boolean isDirectory();
-
-  File getFile();
-
-  InputStream getInputStream() throws FileNotFoundException;
-
-  String getFileName();
-
-  long contentLength() throws IOException;
-
-  long lastModified() throws IOException;
-
-  URL getLocation() throws IOException;
-
-  URI getURI() throws IOException;
-
-  Path getPath();
-
-  String getPathString();
+  default Map<String, Object> getInstances() {
+    return ApeContext.instance().getInstances();
+  }
 }

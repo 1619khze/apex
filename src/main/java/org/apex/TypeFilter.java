@@ -21,13 +21,13 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package org.apex.loader;
+package org.apex;
 
-import org.apex.BeanDefinition;
-
-import java.util.List;
-import java.util.Map;
-
-public interface BeanDefinitionLoader extends Scalable {
-  Map<String, BeanDefinition> load(List<Class<?>> classList) throws Throwable;
+/**
+ * @author WangYi
+ * @since 2020/8/8
+ */
+@FunctionalInterface
+public interface TypeFilter {
+  boolean filter(Class<?> cls);
 }

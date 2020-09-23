@@ -23,21 +23,15 @@
  */
 package org.apex;
 
-import org.apex.utils.PropertyUtils;
-
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Objects;
 
 public interface Const {
-
   String BLANK = "";
 
   String PATH_SERVER_PROFILE = "server.profile";
   String PATH_SERVER_BOOT_CONFIG = "server.boot.conf";
-  String PATH_ENV_WATCHER = "server.env.watcher";
-  String PATH_SCANNER_VERBOSE = "server.scanner.verbose";
-  String PATH_SCANNER_LOGGING = "server.scanner.logging";
 
   String ENV_NAME = "default";
   String SERVER_THREAD_NAME = "（'-'*) run ✧";
@@ -56,5 +50,5 @@ public interface Const {
   String PATH_PREFIX_ROOT = "PATH_PREFIX";
 
   // watch env
-  Path SERVER_WATCHER_PATH = Paths.get(Objects.requireNonNull(PropertyUtils.getCurrentClassPath()));
+  Path SERVER_WATCHER_PATH = Paths.get(Objects.requireNonNull(PropertyHelper.getCurrentClassPath()));
 }

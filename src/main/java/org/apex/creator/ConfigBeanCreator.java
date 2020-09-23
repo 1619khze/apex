@@ -21,27 +21,33 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package org.apex.injector;
+package org.apex.creator;
 
-import org.apex.ApexContext;
-import org.apex.BeanDefinition;
-import org.apex.BeanDefinitionFactory;
-
-import java.util.Map;
+import org.apache.commons.lang3.ObjectUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.apex.BeanCreator;
+import org.apex.annotation.ConfigBean;
+import org.apex.beans.KlassInfo;
 
 /**
  * @author WangYi
- * @since 2020/7/9
+ * @since 2020/9/22
  */
-public interface Injector {
+public class ConfigBeanCreator implements BeanCreator {
 
-  default void inject(Object obj) throws Exception {
-    inject(obj, BeanDefinitionFactory.createBeanDefinition(obj));
+  @Override
+  public boolean support(Class<?> cls) {
+    return cls.isAnnotationPresent(ConfigBean.class) && ObjectUtils.isEmpty(cls.getMethods());
   }
 
-  void inject(Object obj, BeanDefinition def) throws Exception;
-
-  default Map<String, Object> getInstances() {
-    return ApexContext.of().getInstances();
+  @Override
+  public KlassInfo create(Class<?> cls) {
+    final ConfigBean config = cls.getAnnotation(ConfigBean.class);
+    final String name = config.value();
+    if(StringUtils.isNotBlank(name)){
+      return KlassInfo.create(name,cls);
+    } else {
+      return KlassInfo.create(cls);
+    }
   }
 }

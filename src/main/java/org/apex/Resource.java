@@ -23,14 +23,44 @@
  */
 package org.apex;
 
-import java.util.Set;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URI;
+import java.net.URL;
+import java.nio.file.Path;
 
-public interface Options {
-  boolean isVerbose();
+/**
+ * @author WangYi
+ * @since 2020/7/23
+ */
+public interface Resource {
+  static ClassLoader getClassLoader() {
+    return Thread.currentThread().getContextClassLoader();
+  }
 
-  boolean isEnableRealtimeLogging();
+  boolean isExist();
 
-  Set<String> getScanPackages();
+  boolean isFile();
 
-  Set<String> getSkipPackages();
+  boolean isDirectory();
+
+  File getFile();
+
+  InputStream getInputStream() throws FileNotFoundException;
+
+  String getFileName();
+
+  long contentLength() throws IOException;
+
+  long lastModified() throws IOException;
+
+  URL getLocation() throws IOException;
+
+  URI getURI() throws IOException;
+
+  Path getPath();
+
+  String getPathString();
 }

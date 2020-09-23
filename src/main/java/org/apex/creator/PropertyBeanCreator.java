@@ -21,19 +21,33 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package org.apex.utils;
+package org.apex.creator;
+
+import org.apache.commons.lang3.ObjectUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.apex.BeanCreator;
+import org.apex.annotation.PropertyBean;
+import org.apex.beans.KlassInfo;
 
 /**
- * @author TODAY
+ * @author WangYi
+ * @since 2020/9/22
  */
-public abstract class ObjectUtils {
+public class PropertyBeanCreator implements BeanCreator {
 
-  public static boolean isEmpty(Object[] objects) {
-    return objects == null || objects.length == 0;
+  @Override
+  public boolean support(Class<?> cls) {
+    return cls.isAnnotationPresent(PropertyBean.class) && ObjectUtils.isEmpty(cls.getFields());
   }
 
-  public static boolean isNotEmpty(Object[] objects) {
-    return !isEmpty(objects);
+  @Override
+  public KlassInfo create(Class<?> cls) {
+    final PropertyBean config = cls.getAnnotation(PropertyBean.class);
+    final String prefix = config.value();
+    if(StringUtils.isBlank(prefix)){
+      throw new IllegalArgumentException("PropertyBean can't be prefixed");
+    } else {
+      return KlassInfo.create(cls);
+    }
   }
-
 }

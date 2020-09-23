@@ -21,9 +21,9 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package org.apex.utils;
+package org.apex;
 
-import org.apex.BeanInstantiationException;
+import org.apex.exception.BeanInstantiationException;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
@@ -33,9 +33,8 @@ import java.lang.reflect.Modifier;
  * @author WangYi
  * @since 2020/7/24
  */
-public class ReflectionUtils {
-  private ReflectionUtils() {
-  }
+public class ReflectionHelper {
+  private ReflectionHelper() {}
 
   /**
    * Create a object with default constructor

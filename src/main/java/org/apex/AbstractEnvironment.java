@@ -21,9 +21,8 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package org.apex.env;
+package org.apex;
 
-import org.apex.Resource;
 import org.apex.io.FileBaseResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -65,7 +64,7 @@ public abstract class AbstractEnvironment {
    * @param args main method args
    * @throws IOException io exception
    */
-  public void init() throws Exception {
+  void init() throws Exception {
     final String loadBootPath = properties
             .getProperty(PATH_SERVER_BOOT_CONFIG,
                     PATH_CONFIG_PROPERTIES);
@@ -244,7 +243,7 @@ public abstract class AbstractEnvironment {
     }
   }
 
-  public void setArgs(String[] args) {
+  public void mainArgs(String[] args) {
     this.args = args;
   }
 }

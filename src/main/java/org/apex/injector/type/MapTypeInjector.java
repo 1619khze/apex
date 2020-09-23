@@ -23,6 +23,8 @@
  */
 package org.apex.injector.type;
 
+import org.apex.TypeInjector;
+
 import java.lang.reflect.Type;
 import java.util.HashMap;
 import java.util.Map;
@@ -32,6 +34,7 @@ import java.util.Map;
  * @since 2020/8/11
  */
 public class MapTypeInjector implements TypeInjector {
+
   @Override
   public Type getType() {
     return Map.class;

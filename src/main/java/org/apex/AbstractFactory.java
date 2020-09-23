@@ -23,8 +23,8 @@
  */
 package org.apex;
 
-import org.apex.injector.Injector;
-import org.apex.utils.ReflectionUtils;
+import org.apex.beans.KlassInfo;
+import org.apex.exception.BeanInstantiationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,22 +40,21 @@ import static java.util.Objects.requireNonNull;
  * @author WangYi
  * @since 2020/6/22
  */
-@SuppressWarnings("unchecked")
-public abstract class AbstractApexFactory implements ApexFactory {
-  private static final Logger log = LoggerFactory.getLogger(AbstractApexFactory.class);
+public abstract class AbstractFactory implements ApexFactory {
+  private final Logger log = LoggerFactory.getLogger(AbstractFactory.class);
 
-  protected final Map<String, BeanDefinition> beanDefinitions = new ConcurrentHashMap<>(64);
-  protected final Map<String, Object> instanceMapping = new ConcurrentHashMap<>();
+  protected final Map<String, KlassInfo> klassInfoMap = new ConcurrentHashMap<>(64);
+  protected final Map<String, Object> instanceMap = new ConcurrentHashMap<>();
   protected final ServiceLoader<Injector> injectors = ServiceLoader.load(Injector.class);
 
   public Map<String, Object> getInstances() {
-    return instanceMapping;
+    return instanceMap;
   }
 
   protected <T> T getInjectBean(Class<T> cls) {
     requireNonNull(cls, "cls must not be null");
-    Object o = instanceMapping.get(cls.getName());
-    return getInjectBean(cls.isAssignableFrom(o.getClass()) ? cls.cast(o) : (T) o);
+    Object o = instanceMap.get(cls.getName());
+    return getInjectBean(cls.isAssignableFrom(o.getClass()) ? cls.cast(o) : o);
   }
 
   protected <T> T getInjectBean(Object obj) {
@@ -73,7 +72,7 @@ public abstract class AbstractApexFactory implements ApexFactory {
   @Override
   public <T> T getBean(Class<T> cls) {
     requireNonNull(cls, "cls must not be null");
-    if (instanceMapping.containsKey(cls.getName())) {
+    if (instanceMap.containsKey(cls.getName())) {
       return this.getInjectBean(cls);
     }
     return null;
@@ -98,8 +97,8 @@ public abstract class AbstractApexFactory implements ApexFactory {
   @Override
   public <T> T addBean(Class<T> cls) {
     requireNonNull(cls, "cls must not be null");
-    final T ref = ReflectionUtils.newInstance(cls);
-    this.instanceMapping.put(cls.getName(), ref);
+    final T ref = ReflectionHelper.newInstance(cls);
+    this.instanceMap.put(cls.getName(), ref);
     return getBean(cls);
   }
 
@@ -117,7 +116,7 @@ public abstract class AbstractApexFactory implements ApexFactory {
   @Override
   public <T> T addBean(Object obj) {
     requireNonNull(obj, "obj must not be null");
-    this.instanceMapping.put(obj.getClass().getName(), obj);
+    this.instanceMap.put(obj.getClass().getName(), obj);
     return getBean(obj);
   }
 
@@ -125,10 +124,10 @@ public abstract class AbstractApexFactory implements ApexFactory {
   public <T> List<T> getBeanByType(Class<T> cls) {
     requireNonNull(cls, "cls must not be null");
     List<T> refs = new ArrayList<>();
-    if (instanceMapping.isEmpty()) {
+    if (instanceMap.isEmpty()) {
       return refs;
     }
-    for (Map.Entry<String, Object> entry : instanceMapping.entrySet()) {
+    for (Map.Entry<String, Object> entry : instanceMap.entrySet()) {
       Object value = entry.getValue();
       if (value.getClass().isAssignableFrom(cls)) {
         refs.add((T) value);
@@ -146,13 +145,15 @@ public abstract class AbstractApexFactory implements ApexFactory {
 
   @Override
   public void removeAll() {
-    this.instanceMapping.clear();
-    this.beanDefinitions.clear();
+    this.instanceMap.clear();
+    this.klassInfoMap.clear();
   }
 
   @Override
   public void removeBean(String beanName) {
-    this.instanceMapping.remove(beanName);
-    this.beanDefinitions.remove(beanName);
+    this.instanceMap.remove(beanName);
+    this.klassInfoMap.remove(beanName);
   }
+
+  public abstract void init(Apex apex) throws Throwable;
 }

@@ -21,31 +21,25 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package org.apex;
+package org.apex.creator;
 
-import java.util.Objects;
+import org.apex.BeanCreator;
+import org.apex.annotation.Singleton;
+import org.apex.beans.KlassInfo;
 
 /**
  * @author WangYi
- * @since 2020/8/4
+ * @since 2020/9/22
  */
-public class BeanDefinitionFactory {
+public class ScheduledBeanCreator implements BeanCreator {
 
-  public static BeanDefinition createBeanDefinition(Object obj) {
-    Objects.requireNonNull(obj, "obj must not be null");
-    return createBeanDefinition(obj, obj.getClass());
+  @Override
+  public boolean support(Class<?> cls) {
+    return cls.isAnnotationPresent(Singleton.class);
   }
 
-  public static BeanDefinition createBeanDefinition(Object instants, Class<?> clazz) {
-    final BeanDefinition beanDefinition = new BeanDefinition();
-    beanDefinition.setName(clazz.getName());
-    beanDefinition.setSimpleName(clazz.getSimpleName());
-    beanDefinition.setInstants(instants);
-    beanDefinition.setFields(clazz.getDeclaredFields());
-    beanDefinition.setMethods(clazz.getDeclaredMethods());
-    beanDefinition.setExtendsClass(clazz.getSuperclass());
-    beanDefinition.setImplInterfaces(clazz.getInterfaces());
-    beanDefinition.setRef(clazz);
-    return beanDefinition;
+  @Override
+  public KlassInfo create(Class<?> cls) {
+    return KlassInfo.create(cls);
   }
 }

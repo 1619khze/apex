@@ -23,40 +23,18 @@
  */
 package org.apex;
 
-import org.apex.injector.Injector;
-
-import java.util.Map;
+import java.lang.reflect.Type;
 
 /**
  * @author WangYi
- * @since 2020/6/22
+ * @since 2020/8/11
  */
-public class ApexContext extends AbstractApexFactory {
-  private ApexContext() {
-  }
+public interface TypeInjector {
+  Type getType();
 
-  public static ApexContext of() {
-    return ApexContextHolder.instance;
-  }
+  Object inject(String name);
 
-  public void registerBeanDefinitions(Map<String, BeanDefinition> beanDefinitionMap) throws Exception {
-    this.beanDefinitions.putAll(beanDefinitionMap);
-    for (Map.Entry<String, BeanDefinition> entry : beanDefinitions.entrySet()) {
-      this.instanceMapping.put(entry.getKey(), entry.getValue().getInstants());
-    }
-    for (Map.Entry<String, Object> entry : instanceMapping.entrySet()) {
-      BeanDefinition def = this.beanDefinitions.get(entry.getKey());
-      final Object obj = entry.getValue();
-      if (def == null) {
-        def = BeanDefinitionFactory.createBeanDefinition(obj);
-      }
-      for (final Injector next : injectors) {
-        next.inject(obj, def);
-      }
-    }
-  }
-
-  private static class ApexContextHolder {
-    private static final ApexContext instance = new ApexContext();
+  default Environment environment() {
+    return Apex.of().environment();
   }
 }

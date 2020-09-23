@@ -23,6 +23,8 @@
  */
 package org.apex.injector.type;
 
+import org.apex.TypeInjector;
+
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;

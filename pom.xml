@@ -10,30 +10,17 @@
 
     <properties>
         <java.version>1.8</java.version>
-        <classgraph.version>4.8.37</classgraph.version>
-        <checkframework.version>3.3.0</checkframework.version>
-        <oshi.version>4.6.1</oshi.version>
         <slf4j.version>1.7.26</slf4j.version>
         <snakeyaml.version>1.24</snakeyaml.version>
         <logback.version>1.2.3</logback.version>
-        <byte-buddy.version>1.10.10</byte-buddy.version>
-        <jsr330.version>1</jsr330.version>
         <junit.version>4.10</junit.version>
+        <reflections.version>0.9.12</reflections.version>
+        <common-lang3.version>3.11</common-lang3.version>
         <maven-license-plugin.version>1.9.0</maven-license-plugin.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
     <dependencies>
-        <dependency>
-            <groupId>io.github.classgraph</groupId>
-            <artifactId>classgraph</artifactId>
-            <version>${classgraph.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.github.oshi</groupId>
-            <artifactId>oshi-core</artifactId>
-            <version>${oshi.version}</version>
-        </dependency>
         <dependency>
             <groupId>org.yaml</groupId>
             <artifactId>snakeyaml</artifactId>
@@ -56,20 +43,20 @@
             <version>${slf4j.version}</version>
         </dependency>
         <dependency>
-            <groupId>net.bytebuddy</groupId>
-            <artifactId>byte-buddy</artifactId>
-            <version>${byte-buddy.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>javax.inject</groupId>
-            <artifactId>javax.inject</artifactId>
-            <version>${jsr330.version}</version>
-        </dependency>
-        <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
             <version>${junit.version}</version>
             <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+            <version>${common-lang3.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.reflections</groupId>
+            <artifactId>reflections</artifactId>
+            <version>${reflections.version}</version>
         </dependency>
     </dependencies>
 
@@ -80,8 +67,8 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.8.1</version>
                 <configuration>
-                    <source>${java.version}</source>
-                    <target>${java.version}</target>
+                    <source>8</source>
+                    <target>8</target>
                 </configuration>
             </plugin>
             <plugin>
@@ -106,7 +93,7 @@
                 <version>${maven-license-plugin.version}</version>
                 <configuration>
                     <basedir>${basedir}</basedir>
-                    <header>src/main/resources/etc/header.txt</header>
+                    <header>LICENSE</header>
                     <quiet>false</quiet>
                     <failIfMissing>true</failIfMissing>
                     <aggregate>true</aggregate>

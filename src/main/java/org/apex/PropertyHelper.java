@@ -21,9 +21,8 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package org.apex.env;
+package org.apex;
 
-import org.apex.Const;
 import org.yaml.snakeyaml.Yaml;
 
 import java.io.File;

@@ -21,23 +21,31 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package org.apex.injector.type;
+package org.apex.creator;
 
-import org.apex.Apex;
-import org.apex.Environment;
-
-import java.lang.reflect.Type;
+import org.apache.commons.lang3.StringUtils;
+import org.apex.BeanCreator;
+import org.apex.annotation.Singleton;
+import org.apex.beans.KlassInfo;
 
 /**
  * @author WangYi
- * @since 2020/8/11
+ * @since 2020/7/24
  */
-public interface TypeInjector {
-  Type getType();
+public class SingletonBeanCreator implements BeanCreator {
 
-  Object inject(String name);
+  @Override
+  public boolean support(Class<?> cls) {
+    return cls.isAnnotationPresent(Singleton.class);
+  }
 
-  default Environment environment() {
-    return Apex.of().environment();
+  @Override
+  public KlassInfo create(Class<?> cls) {
+    Singleton annotation = cls.getAnnotation(Singleton.class);
+    String value = annotation.value();
+    if (!StringUtils.isBlank(value)){
+      return KlassInfo.create(value,cls);
+    }
+    return KlassInfo.create(cls);
   }
 }

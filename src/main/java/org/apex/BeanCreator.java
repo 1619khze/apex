@@ -21,13 +21,13 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package org.apex.loader;
+package org.apex;
 
-/**
- * @author WangYi
- * @since 2020/8/8
- */
-@FunctionalInterface
-public interface TypeFilter {
-  boolean filter(Class<?> cls);
+import org.apex.beans.KlassInfo;
+
+public interface BeanCreator {
+
+  boolean support(Class<?> cls);
+
+  KlassInfo create(Class<?> cls) throws Exception;
 }

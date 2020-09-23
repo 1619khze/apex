@@ -23,7 +23,13 @@
  */
 package org.apex.io;
 
-import java.io.*;
+import org.apex.Resource;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.URI;
 import java.net.URL;
 import java.nio.file.Files;

@@ -23,213 +23,36 @@
  */
 package org.apex;
 
-import io.github.classgraph.ClassInfoList;
-import io.github.classgraph.ScanResult;
-import org.apex.loader.BeanDefinitionLoader;
-import org.apex.loader.JavaBeanDefinitionLoader;
-import org.apex.loader.TypeFilter;
+import org.apache.commons.lang3.Validate;
 import org.apex.scheduler.Scheduler;
-import org.apex.utils.PropertyUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import java.io.StringReader;
 import java.lang.annotation.Annotation;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 
 import static java.util.Objects.requireNonNull;
-import static org.apex.Const.*;
 
 /**
  * @author WangYi
  * @since 2020/9/8
  */
 public class Apex {
-  private static final Logger log = LoggerFactory.getLogger(Apex.class);
-
-  /**
-   * List of paths to be scanned and ignored.
-   */
-  private static final Set<String> skipPaths = new LinkedHashSet<>();
-  private static final Set<String> packages = new LinkedHashSet<>();
-
-  /**
-   * Variables about whether the scan status and environment configuration are enabled.
-   */
-  private static boolean verbose = false;
-  private static boolean realtimeLogging = false;
-  private final List<Class<? extends Annotation>> annotatedElements = new ArrayList<>();
+  private final List<Class<? extends Annotation>> withTypeAnnotations = new ArrayList<>();
   private final List<TypeFilter> typeFilters = new ArrayList<>();
-  private boolean envConfig = false;
-  private boolean masterConfig = false;
+  private final Environment environment = Environment.create();
+  private final List<String> scanPackages = new ArrayList<>();
 
-  /**
-   * Current environment and unified environment objects.
-   */
-  private String envName = ENV_NAME;
-  private Environment environment = new Environment();
-  private BeanDefinitionLoader beanDefinitionLoader;
-  private Options options;
-  private Scanner scanner;
-
-  /**
-   * Scan related objects and configuration information.
-   */
-  private String scanPath;
-  private String[] mainArgs;
-
-  /**
-   * Cacheable thread pool for running scanning services.
-   */
   private Scheduler scheduler;
   private Executor executor;
-
-  private Apex() {
-  }
-
-  /**
-   * Ensures that the argument expression is true.
-   */
-  static void requireArgument(boolean expression, String template, Object... args) {
-    if (!expression) {
-      throw new IllegalArgumentException(String.format(template, args));
-    }
-  }
-
-  /**
-   * Ensures that the argument expression is true.
-   */
-  static void requireArgument(boolean expression) {
-    if (!expression) {
-      throw new IllegalArgumentException();
-    }
-  }
-
-  /**
-   * Ensures that the state expression is true.
-   */
-  static void requireState(boolean expression) {
-    if (!expression) {
-      throw new IllegalStateException();
-    }
-  }
-
-  /**
-   * Ensures that the state expression is true.
-   */
-  static void requireState(boolean expression, String template, Object... args) {
-    if (!expression) {
-      throw new IllegalStateException(String.format(template, args));
-    }
-  }
+  private String[] args;
 
   public static Apex of() {
     return ApexHolder.instance;
-  }
-
-  /**
-   * Scan options for building Classgraph
-   *
-   * @return ClassgraphOptions
-   */
-  public static ClassgraphOptions buildOptions() {
-    return ClassgraphOptions.builder()
-            .verbose(verbose)
-            .scanPackages(packages)
-            .skipPackages(skipPaths)
-            .realtimeLogging(realtimeLogging)
-            .build();
-  }
-
-  /**
-   * Get Apex context
-   *
-   * @return ApexContext
-   */
-  public synchronized Map<String, BeanDefinition> load() {
-    if (Objects.isNull(beanDefinitionLoader)) {
-      this.beanDefinitionLoader = new JavaBeanDefinitionLoader();
-      this.beanDefinitionLoader.addScanAnnotation(annotatedElements);
-    }
-    if (Objects.isNull(this.scanner)) {
-      this.scanner = new ClassgraphScanner(
-              Objects.isNull(this.options) ?
-                      Apex.buildOptions() : this.options
-      );
-    }
-    try {
-      final List<Class<?>> classes = loadClasses();
-      final Map<String, BeanDefinition> beanDefinitionMap
-              = this.beanDefinitionLoader.load(classes);
-
-      this.loadConfig(mainArgs);
-      return beanDefinitionMap;
-    } catch (Throwable e) {
-      log.error("An exception occurred while initializing the context", e);
-      return new HashMap<>();
-    }
-  }
-
-  /**
-   * According to the scan path, all scan results are converted to Class and returned
-   *
-   * @return Class<?> List
-   */
-  private List<Class<?>> loadClasses() {
-    List<Class<?>> result = new ArrayList<>();
-    try (ScanResult scanResult = this.scanner.scan(scanPath)) {
-      final ClassInfoList allClasses = scanResult.getAllClasses();
-      final List<Class<?>> classes = allClasses.loadClasses();
-
-      result.addAll(classes);
-      return result;
-    }
-  }
-
-  /**
-   * Set Whether to start the detailed scan log of classgraph
-   *
-   * @param verbose Whether to enable detailed scan log
-   * @return Apex
-   */
-  public Apex verbose(boolean verbose) {
-    Apex.verbose = verbose;
-    this.environment.add(PATH_SCANNER_VERBOSE, verbose);
-    return this;
-  }
-
-  /**
-   * Get Whether to start the detailed scan log of classgraph
-   *
-   * @return Whether to enable detailed scan log
-   */
-  public boolean verbose() {
-    return this.environment.getBoolean(PATH_SCANNER_VERBOSE, verbose);
-  }
-
-  /**
-   * Set Whether to enable real-time recording of classgraph
-   *
-   * @param realtimeLogging Whether to enable real-time recording of classgraph
-   * @return Apex
-   */
-  public Apex realtimeLogging(boolean realtimeLogging) {
-    Apex.realtimeLogging = realtimeLogging;
-    this.environment.add(PATH_SCANNER_LOGGING, realtimeLogging);
-    return this;
-  }
-
-  /**
-   * Get Whether to enable real-time recording of classgraph
-   *
-   * @return Whether to enable real-time recording of classgraph
-   */
-  public boolean realtimeLogging() {
-    return this.environment.getBoolean(PATH_SCANNER_LOGGING, realtimeLogging);
   }
 
   /**
@@ -242,104 +65,41 @@ public class Apex {
   }
 
   /**
-   * Get environment name
-   *
-   * @return environment name
+   * add type filter
+   * @param typeFilters type filter
+   * @return this
    */
-  public String envName() {
-    return requireNonNull(envName);
-  }
-
-  /**
-   * Get environment config load status
-   *
-   * @return environment config load status
-   */
-  public boolean envConfig() {
-    return envConfig;
-  }
-
-  /**
-   * Get master config properties or yaml load status
-   *
-   * @return master config properties or yaml load status
-   */
-  public boolean masterConfig() {
-    return masterConfig;
-  }
-
-  public Apex mainArgs(String[] mainArgs) {
-    requireArgument(Objects.nonNull(mainArgs), "mainArgs can't be null");
-    this.mainArgs = Objects.requireNonNull(mainArgs);
-    return this;
-  }
-
-  public Apex packages(Collection<String> packages) {
-    if (!packages.isEmpty()) {
-      Apex.packages.addAll(packages);
-    }
-    return this;
-  }
-
-  public Apex skipPath(String skipPath) {
-    requireArgument(skipPath.contains("."), "Need correct format");
-    Apex.skipPaths.add(Objects.requireNonNull(skipPath));
-    return this;
-  }
-
-  public Apex skipPath(Collection<String> skipPaths) {
-    if (!skipPaths.isEmpty()) {
-      Apex.skipPaths.addAll(skipPaths);
-    }
-    return this;
-  }
-
-  public Apex scanner(Scanner scanner) {
-    requireArgument(this.scanner == null, "beanResolver was already set to %s", this.scanner);
-    this.scanner = Objects.requireNonNull(scanner);
-    return this;
-  }
-
-  public Apex packages(String scanPath) {
-    requireArgument(scanPath != null, "Need a valid and existing scan path");
-    Apex.packages.add(scanPath);
-    this.scanPath = scanPath;
-    return this;
-  }
-
-  public Apex environment(Environment environment) {
-    requireArgument(environment != null, "environment can't be null", environment);
-    this.environment = environment;
-    return this;
-  }
-
-  public Apex resolver(BeanDefinitionLoader beanDefinitionLoader) {
-    requireArgument(this.beanDefinitionLoader == null,
-            "beanDefinitionLoader was already set to %s", this.beanDefinitionLoader);
-    this.beanDefinitionLoader = requireNonNull(beanDefinitionLoader);
-    return this;
-  }
-
-  public Apex options(Options options) {
-    requireArgument(this.options == null, "options was already set to %s", this.options);
-    this.options = requireNonNull(options);
-    return this;
-  }
-
   public Apex typeFilter(TypeFilter typeFilter) {
-    requireArgument(typeFilter != null, "typeFilter can't be null");
+    Validate.notNull(typeFilter, "typeFilter can't be null");
     this.typeFilters.add(typeFilter);
     return this;
   }
 
-  public Apex typeFilter(List<TypeFilter> typeFilters) {
-    requireArgument(!typeFilters.isEmpty(), "typeFilter list can't be empty");
+  /**
+   * add type filter list
+   * @param typeFilters type filter list
+   * @return this
+   */
+  public Apex typeFilters(List<TypeFilter> typeFilters) {
+    Validate.isTrue(typeFilters.isEmpty(), "typeFilter list can't be empty");
     this.typeFilters.addAll(typeFilters);
     return this;
   }
 
+  /**
+   * Get type filter
+   * @return type filter list
+   */
   public List<TypeFilter> typeFilters() {
     return typeFilters;
+  }
+
+  /**
+   * Get with type annotations
+   * @return Annotation list
+   */
+  public List<Class<? extends Annotation>> withTypeAnnotations() {
+    return withTypeAnnotations;
   }
 
   /**
@@ -348,9 +108,9 @@ public class Apex {
    * @param annotatedElements annotations list
    * @return this
    */
-  public Apex addScanAnnotation(List<Class<? extends Annotation>> annotatedElements) {
-    requireArgument(annotatedElements != null, "annotatedElements can't be null");
-    this.annotatedElements.addAll(annotatedElements);
+  public Apex withTypeAnnotation(List<Class<? extends Annotation>> annotatedElements) {
+    Validate.notNull(annotatedElements, "annotatedElements can't be null");
+    this.withTypeAnnotations.addAll(annotatedElements);
     return this;
   }
 
@@ -361,9 +121,9 @@ public class Apex {
    * @return this
    */
   @SafeVarargs
-  public final Apex addScanAnnotation(Class<? extends Annotation>... annotatedElements) {
-    requireArgument(annotatedElements != null, "annotatedElements can't be null");
-    Collections.addAll(this.annotatedElements, annotatedElements);
+  public final Apex withTypeAnnotation(Class<? extends Annotation>... annotations) {
+    Validate.notNull(annotations, "annotations can't be null");
+    Collections.addAll(this.withTypeAnnotations, annotations);
     return this;
   }
 
@@ -389,7 +149,7 @@ public class Apex {
    * @throws NullPointerException if the specified scheduler is null
    */
   public Apex scheduler(Scheduler scheduler) {
-    requireState(this.scheduler == null, "scheduler was already set to %s", this.scheduler);
+    Validate.notNull(this.scheduler, "scheduler was already set to %s", this.scheduler);
     this.scheduler = requireNonNull(scheduler);
     return this;
   }
@@ -412,7 +172,7 @@ public class Apex {
    * @throws NullPointerException if the specified executor is null
    */
   public Apex executor(Executor executor) {
-    requireState(this.executor == null, "executor was already set to %s", this.executor);
+    Validate.notNull(this.executor, "executor was already set to %s", this.executor);
     this.executor = requireNonNull(executor);
     return this;
   }
@@ -422,7 +182,7 @@ public class Apex {
    *
    * @return An object that executes submitted {@link Runnable} tasks
    */
-  public Executor getExecutor() {
+  public Executor executor() {
     return (executor == null) ? ForkJoinPool.commonPool() : executor;
   }
 
@@ -431,7 +191,7 @@ public class Apex {
    *
    * @return Scheduler
    */
-  public Scheduler getScheduler() {
+  public Scheduler scheduler() {
     if ((scheduler == null) || (scheduler == Scheduler.disabledScheduler())) {
       return Scheduler.disabledScheduler();
     } else if (scheduler == Scheduler.systemScheduler()) {
@@ -441,144 +201,26 @@ public class Apex {
   }
 
   /**
-   * Load configuration from multiple places between startup services.
-   * Support items are: Properties are configured by default, and the
-   * properties loaded by default are application.properties If there
-   * is no properties configuration, the yaml format is used, and the
-   * default yaml loaded is application.yml Support loading
-   * configuration from args array of main function Support loading
-   * configuration from System.Property
-   *
-   * @param args main method args
-   * @throws IllegalAccessException IllegalAccessException
+   * Get scan package
+   * @return scan packages
    */
-  private void loadConfig(String[] args) throws IllegalAccessException {
-    String bootConf = environment().get(PATH_SERVER_BOOT_CONFIG, PATH_CONFIG_PROPERTIES);
-    Environment bootConfEnv = Environment.of(bootConf);
-
-    Map<String, String> argsMap = this.loadMainArgs(args);
-    Map<String, String> constField = PropertyUtils.confFieldMap();
-
-    this.loadPropsOrYaml(bootConfEnv, constField);
-
-    /** Support loading configuration from args array of main function. */
-    if (!bootConfEnv.isEmpty()) {
-      Map<String, String> bootEnvMap = bootConfEnv.toStringMap();
-      Set<Map.Entry<String, String>> entrySet = bootEnvMap.entrySet();
-
-      entrySet.forEach(entry -> this.environment
-              .add(entry.getKey(), entry.getValue()));
-
-      this.masterConfig = true;
-    }
-
-    if (Objects.nonNull(argsMap.get(PATH_SERVER_PROFILE))) {
-      String envNameArg = argsMap.get(PATH_SERVER_PROFILE);
-      this.envConfig(envNameArg);
-      this.envName = envNameArg;
-      argsMap.remove(PATH_SERVER_PROFILE);
-      this.envConfig = true;
-    }
-
-    if (!envConfig) {
-      String profileName = this.environment.get(PATH_SERVER_PROFILE);
-      if (Objects.nonNull(profileName) && !BLANK.equals(profileName)) {
-        envConfig(profileName);
-        this.envName = profileName;
-      }
-    }
-    this.nestedAttributes();
+  public List<String> packages() {
+    return scanPackages;
   }
 
   /**
-   * Supports nested property functions through ${} in properties
-   * and yaml configuration files
+   * Set main method args
    */
-  private void nestedAttributes() {
-    final Map<String, Object> nestedMap = new HashMap<>();
-    Map<String, Object> properties = this.environment.toMap();
-    for (Map.Entry<String, Object> entry : properties.entrySet()) {
-      Object value = entry.getValue();
-      String val = value.toString();
-      if (!val.contains("${") && !val.contains("}")) {
-        continue;
-      }
-      for (String key : properties.keySet()) {
-        String replaceKey = "${" + key.split("\\.")[key.split("\\.").length - 1] + "}";
-        if (!val.contains(replaceKey)) {
-          continue;
-        }
-        val = val.replace(replaceKey, String.valueOf(properties.getOrDefault(key, "")));
-        nestedMap.put(entry.getKey(), val);
-      }
-    }
-    this.environment.addAll(nestedMap);
+  public void mainArgs(String[] args) {
+    this.args = args;
   }
 
   /**
-   * load properties and yaml
-   *
-   * @param bootConfEnv Environment used when the server starts
-   * @param constField  Constant attribute map
+   * Get main method args
+   * @return main method args
    */
-  private void loadPropsOrYaml(Environment bootConfEnv, Map<String, String> constField) {
-    /** Properties are configured by default, and the properties loaded
-     * by default are application.properties */
-    constField.keySet()
-            .forEach(key ->
-                    Optional.ofNullable(System.getProperty(constField.get(key)))
-                            .ifPresent(property -> bootConfEnv.add(key, property))
-            );
-
-    /** If there is no properties configuration, the yaml format is
-     * used, and the default yaml loaded is application.yml */
-    if (bootConfEnv.isEmpty()) {
-      Optional.ofNullable(PropertyUtils.yaml(PATH_CONFIG_YAML))
-              .ifPresent(yamlConfigTreeMap ->
-                      bootConfEnv.load(
-                              new StringReader(PropertyUtils.toProperties(yamlConfigTreeMap))
-                      )
-              );
-    }
-  }
-
-  /**
-   * Load main function parameters, and override if main configuration exists
-   *
-   * @param args String parameter array of main method
-   * @return Write the parameters to the map and return
-   */
-  private Map<String, String> loadMainArgs(String[] args) {
-    Map<String, String> argsMap = PropertyUtils.parseArgs(args);
-    if (argsMap.size() > 0) {
-      log.info("Entered command line:{}", argsMap);
-    }
-
-    for (Map.Entry<String, String> next : argsMap.entrySet()) {
-      this.environment.add(next.getKey(), next.getValue());
-    }
-    return argsMap;
-  }
-
-  /**
-   * Load the environment configuration, if it exists in the main
-   * configuration, it will be overwritten in the environment
-   * configuration
-   *
-   * @param envName Environment name
-   */
-  private void envConfig(String envName) {
-    String envFileName = "application" + "-" + envName + ".properties";
-    Environment customerEnv = Environment.of(envFileName);
-    if (customerEnv.isEmpty()) {
-      String envYmlFileName = "application" + "-" + envName + ".yml";
-      customerEnv = Environment.of(envYmlFileName);
-    }
-    if (!customerEnv.isEmpty()) {
-      customerEnv.props().forEach((key, value) ->
-              this.environment.add(key.toString(), value));
-    }
-    this.environment.add(PATH_SERVER_PROFILE, envName);
+  public String[] mainArgs(){
+    return args;
   }
 
   /**

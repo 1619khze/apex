@@ -23,11 +23,12 @@
  */
 package org.apex.injector;
 
+import org.apache.commons.lang3.ObjectUtils;
 import org.apex.Apex;
-import org.apex.BeanDefinition;
-import org.apex.Environment;
+import org.apex.Injector;
 import org.apex.annotation.Value;
-import org.apex.utils.ObjectUtils;
+import org.apex.beans.KlassInfo;
+import org.apex.Environment;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,8 +43,8 @@ public class FieldValueInjector implements Injector {
   private final Environment environment = Apex.of().environment();
 
   @Override
-  public void inject(Object obj, BeanDefinition def) throws IllegalAccessException {
-    Field[] fields = def.getFields();
+  public void inject(Object obj, KlassInfo klassInfo) throws IllegalAccessException {
+    Field[] fields = klassInfo.clazz().getFields();
     if (ObjectUtils.isEmpty(fields)) {
       return;
     }

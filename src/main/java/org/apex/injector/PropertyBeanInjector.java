@@ -24,11 +24,11 @@
 package org.apex.injector;
 
 import org.apex.Apex;
-import org.apex.BeanDefinition;
 import org.apex.Environment;
+import org.apex.Injector;
+import org.apex.TypeInjector;
 import org.apex.annotation.PropertyBean;
-import org.apex.injector.type.TypeInjector;
-import org.apex.utils.ObjectUtils;
+import org.apex.beans.KlassInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,31 +40,24 @@ import java.util.ServiceLoader;
  * @author WangYi
  * @since 2020/8/4
  */
-public class ConfigBeanInjector implements Injector {
-  private final Logger log = LoggerFactory.getLogger(ConfigBeanInjector.class);
+public class PropertyBeanInjector implements Injector {
+  private final Logger log = LoggerFactory.getLogger(PropertyBeanInjector.class);
   private final Environment environment = Apex.of().environment();
+  private final ServiceLoader<TypeInjector> typeInjectors = ServiceLoader.load(TypeInjector.class);
 
   @Override
-  public void inject(Object obj, BeanDefinition def) throws Exception {
-    final Class<?> ref = def.getRef();
-    final Field[] declaredFields = def.getFields();
-    if (!ref.isAnnotationPresent(PropertyBean.class)
-            || ObjectUtils.isEmpty(declaredFields)) {
+  public void inject(Object obj, KlassInfo klassInfo) throws Exception {
+    if(!klassInfo.clazz().isAnnotationPresent(PropertyBean.class)){
       return;
     }
-    final PropertyBean config = ref.getAnnotation(PropertyBean.class);
-    final String prefix = config.value();
-    this.inject(obj, prefix, declaredFields);
-  }
-
-  private void inject(Object obj, String prefix, Field[] declaredFields) throws IllegalAccessException {
-    for (Field field : declaredFields) {
+    final Field[] fields = klassInfo.clazz().getFields();
+    final PropertyBean annotation = klassInfo.clazz().getAnnotation(PropertyBean.class);
+    final String prefix = annotation.value();
+    for (Field field : fields) {
       field.setAccessible(true);
       Object fieldProperty = null;
 
       String name = prefix + "." + field.getName();
-      final ServiceLoader<TypeInjector> typeInjectors
-              = ServiceLoader.load(TypeInjector.class);
 
       for (TypeInjector typeInjector : typeInjectors) {
         if (field.getType().equals(typeInjector.getType())) {
@@ -74,17 +67,13 @@ public class ConfigBeanInjector implements Injector {
       if (Objects.isNull(fieldProperty)) {
         fieldProperty = environment.getObject(name);
       }
-      fieldInject(obj, field, fieldProperty);
-    }
-  }
-
-  private void fieldInject(Object obj, Field field, Object fieldProperty) throws IllegalAccessException {
-    try {
-      field.set(obj, fieldProperty);
-    } catch (IllegalAccessException e) {
-      log.error("Injection exception, current field: {} " +
-              "injection {} failed", field.getName(), fieldProperty);
-      throw e;
+      try {
+        field.set(obj, fieldProperty);
+      } catch (IllegalAccessException e) {
+        log.error("Injection exception, current field: {} " +
+                "injection {} failed", field.getName(), fieldProperty);
+        throw e;
+      }
     }
   }
 }
