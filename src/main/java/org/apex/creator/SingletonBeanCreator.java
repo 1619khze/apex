@@ -25,8 +25,8 @@ package org.apex.creator;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apex.BeanCreator;
+import org.apex.KlassInfo;
 import org.apex.annotation.Singleton;
-import org.apex.beans.KlassInfo;
 
 /**
  * @author WangYi
@@ -43,8 +43,8 @@ public class SingletonBeanCreator implements BeanCreator {
   public KlassInfo create(Class<?> cls) {
     Singleton annotation = cls.getAnnotation(Singleton.class);
     String value = annotation.value();
-    if (!StringUtils.isBlank(value)){
-      return KlassInfo.create(value,cls);
+    if (!StringUtils.isBlank(value)) {
+      return KlassInfo.create(value, cls);
     }
     return KlassInfo.create(cls);
   }

@@ -23,10 +23,10 @@
  */
 package org.apex.injector;
 
+import org.apex.InjectContext;
 import org.apex.Injector;
 import org.apex.annotation.Inject;
 import org.apex.annotation.Named;
-import org.apex.beans.KlassInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,8 +41,8 @@ public class FieldInjector implements Injector {
   private static final Logger log = LoggerFactory.getLogger(FieldInjector.class);
 
   @Override
-  public void inject(Object obj, KlassInfo klassInfo) throws Exception {
-    Field[] fields = klassInfo.clazz().getFields();
+  public void inject(InjectContext injectContext) throws Exception {
+    Field[] fields = injectContext.getKlassInfo().clazz().getDeclaredFields();
     for (Field field : fields) {
       if (!field.isAnnotationPresent(Inject.class)) {
         continue;
@@ -58,7 +58,7 @@ public class FieldInjector implements Injector {
       }
       field.setAccessible(true);
       try {
-        field.set(obj, this.getInstances().get(id));
+        field.set(injectContext.getObject(), injectContext.getInstanceMap().get(id));
       } catch (IllegalAccessException e) {
         log.error("An exception occurred while injecting field");
         throw e;

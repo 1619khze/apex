@@ -23,8 +23,6 @@
  */
 package org.apex;
 
-import org.apex.beans.KlassInfo;
-
 public interface BeanCreator {
 
   boolean support(Class<?> cls);

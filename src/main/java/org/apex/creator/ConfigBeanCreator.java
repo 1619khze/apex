@@ -24,30 +24,41 @@
 package org.apex.creator;
 
 import org.apache.commons.lang3.ObjectUtils;
-import org.apache.commons.lang3.StringUtils;
-import org.apex.BeanCreator;
+import org.apex.InjectContext;
+import org.apex.KlassInfo;
+import org.apex.annotation.Bean;
 import org.apex.annotation.ConfigBean;
-import org.apex.beans.KlassInfo;
+
+import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author WangYi
  * @since 2020/9/22
  */
-public class ConfigBeanCreator implements BeanCreator {
+public class ConfigBeanCreator {
 
-  @Override
   public boolean support(Class<?> cls) {
-    return cls.isAnnotationPresent(ConfigBean.class) && ObjectUtils.isEmpty(cls.getMethods());
+    return cls.isAnnotationPresent(ConfigBean.class) && ObjectUtils.isEmpty(cls.getDeclaredFields());
   }
 
-  @Override
-  public KlassInfo create(Class<?> cls) {
-    final ConfigBean config = cls.getAnnotation(ConfigBean.class);
-    final String name = config.value();
-    if(StringUtils.isNotBlank(name)){
-      return KlassInfo.create(name,cls);
-    } else {
-      return KlassInfo.create(cls);
+  public KlassInfo create(InjectContext injectContext, Method method) throws Exception {
+    if (!method.isAnnotationPresent(Bean.class)) {
+      return null;
     }
+    List<Object> invokeParam = new ArrayList<>();
+    Class<?>[] parameterTypes = method.getParameterTypes();
+    for (Class<?> parameterType : parameterTypes) {
+      Object o = injectContext.getInstanceMap().get(parameterType.getName());
+      invokeParam.add(o);
+    }
+    Object invoke;
+    if (method.getParameterCount() == 0) {
+      invoke = method.invoke(injectContext.getObject());
+    } else {
+      invoke = method.invoke(injectContext.getObject(), invokeParam);
+    }
+    return KlassInfo.create(invoke);
   }
 }

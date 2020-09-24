@@ -21,9 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package org.apex.beans;
-
-import org.apex.ReflectionHelper;
+package org.apex;
 
 import java.io.Serializable;
 
@@ -31,12 +29,12 @@ import java.io.Serializable;
  * @author WangYi
  * @since 2020/9/22
  */
-public final class KlassInfo implements Serializable {
+public class KlassInfo implements Serializable {
   private final String name;
   private final Class<?> clazz;
   private final Object target;
 
-  private KlassInfo(String name,Class<?> clazz, Object target) {
+  private KlassInfo(String name, Class<?> clazz, Object target) {
     this.name = name;
     this.clazz = clazz;
     this.target = target;
@@ -70,8 +68,8 @@ public final class KlassInfo implements Serializable {
     return new KlassInfo(clazz);
   }
 
-  public static KlassInfo create(String name,Class<?> clazz) {
-    return new KlassInfo(name,clazz);
+  public static KlassInfo create(String name, Class<?> clazz) {
+    return new KlassInfo(name, clazz);
   }
 
   public Class<?> clazz() {

@@ -23,7 +23,6 @@
  */
 package org.apex;
 
-import org.apex.beans.KlassInfo;
 import org.apex.exception.BeanInstantiationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,18 +40,18 @@ import static java.util.Objects.requireNonNull;
  * @since 2020/6/22
  */
 public abstract class AbstractFactory implements ApexFactory {
-  private final Logger log = LoggerFactory.getLogger(AbstractFactory.class);
-
   protected final Map<String, KlassInfo> klassInfoMap = new ConcurrentHashMap<>(64);
   protected final Map<String, Object> instanceMap = new ConcurrentHashMap<>();
   protected final ServiceLoader<Injector> injectors = ServiceLoader.load(Injector.class);
-
-  public Map<String, Object> getInstances() {
-    return instanceMap;
-  }
+  private final Logger log = LoggerFactory.getLogger(AbstractFactory.class);
+  private final Map<String, Object> injectedMap = new ConcurrentHashMap<>();
 
   protected <T> T getInjectBean(Class<T> cls) {
     requireNonNull(cls, "cls must not be null");
+    if (injectedMap.containsKey(cls.getName())) {
+      return (T) injectedMap.get(cls.getName());
+    }
+
     Object o = instanceMap.get(cls.getName());
     return getInjectBean(cls.isAssignableFrom(o.getClass()) ? cls.cast(o) : o);
   }
@@ -61,8 +60,11 @@ public abstract class AbstractFactory implements ApexFactory {
     requireNonNull(obj, "obj must not be null");
     try {
       for (final Injector next : injectors) {
-        next.inject(obj);
+        next.inject(InjectContext.create(
+                klassInfoMap.getOrDefault(obj.getClass().getName(),
+                        KlassInfo.create(obj)), instanceMap));
       }
+      this.injectedMap.put(obj.getClass().getName(), obj);
       return (T) obj;
     } catch (Exception e) {
       throw new BeanInstantiationException("obj can't be injected");
@@ -81,11 +83,7 @@ public abstract class AbstractFactory implements ApexFactory {
   @Override
   public <T> T getBean(String beanName) {
     requireNonNull(beanName, "beanName must not be null");
-    try {
-      return ((T) getBean(Class.forName(beanName)));
-    } catch (ClassNotFoundException e) {
-      return null;
-    }
+    return getBean(instanceMap.get(beanName));
   }
 
   @Override

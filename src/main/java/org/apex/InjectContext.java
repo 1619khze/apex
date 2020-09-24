@@ -23,10 +23,36 @@
  */
 package org.apex;
 
+import java.util.Map;
+
 /**
  * @author WangYi
- * @since 2020/7/9
+ * @since 2020/9/24
  */
-public interface Injector {
-  void inject(InjectContext injectContext) throws Exception;
+public class InjectContext {
+  private final Object object;
+  private final KlassInfo klassInfo;
+  private final Map<String, Object> instanceMap;
+
+  public InjectContext(KlassInfo klassInfo, Map<String, Object> instanceMap) {
+    this.klassInfo = klassInfo;
+    this.object = klassInfo.target();
+    this.instanceMap = instanceMap;
+  }
+
+  public static InjectContext create(KlassInfo klassInfo, Map<String, Object> instanceMap) {
+    return new InjectContext(klassInfo, instanceMap);
+  }
+
+  public Object getObject() {
+    return object;
+  }
+
+  public KlassInfo getKlassInfo() {
+    return klassInfo;
+  }
+
+  public Map<String, Object> getInstanceMap() {
+    return instanceMap;
+  }
 }

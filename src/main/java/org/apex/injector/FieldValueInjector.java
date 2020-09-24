@@ -25,10 +25,10 @@ package org.apex.injector;
 
 import org.apache.commons.lang3.ObjectUtils;
 import org.apex.Apex;
+import org.apex.Environment;
+import org.apex.InjectContext;
 import org.apex.Injector;
 import org.apex.annotation.Value;
-import org.apex.beans.KlassInfo;
-import org.apex.Environment;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -43,8 +43,8 @@ public class FieldValueInjector implements Injector {
   private final Environment environment = Apex.of().environment();
 
   @Override
-  public void inject(Object obj, KlassInfo klassInfo) throws IllegalAccessException {
-    Field[] fields = klassInfo.clazz().getFields();
+  public void inject(InjectContext injectContext) throws IllegalAccessException {
+    Field[] fields = injectContext.getKlassInfo().clazz().getDeclaredFields();
     if (ObjectUtils.isEmpty(fields)) {
       return;
     }
@@ -59,7 +59,7 @@ public class FieldValueInjector implements Injector {
                 .replace("}", "");
         field.setAccessible(true);
         try {
-          field.set(obj, environment.getString(key, null));
+          field.set(injectContext.getObject(), environment.getString(key, null));
         } catch (IllegalAccessException e) {
           log.error("An exception occurred while injecting value field");
           throw e;

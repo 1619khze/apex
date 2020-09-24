@@ -25,10 +25,11 @@ package org.apex.injector;
 
 import org.apex.Apex;
 import org.apex.Environment;
+import org.apex.InjectContext;
 import org.apex.Injector;
+import org.apex.KlassInfo;
 import org.apex.TypeInjector;
 import org.apex.annotation.PropertyBean;
-import org.apex.beans.KlassInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,11 +47,12 @@ public class PropertyBeanInjector implements Injector {
   private final ServiceLoader<TypeInjector> typeInjectors = ServiceLoader.load(TypeInjector.class);
 
   @Override
-  public void inject(Object obj, KlassInfo klassInfo) throws Exception {
-    if(!klassInfo.clazz().isAnnotationPresent(PropertyBean.class)){
+  public void inject(InjectContext injectContext) throws Exception {
+    KlassInfo klassInfo = injectContext.getKlassInfo();
+    if (!klassInfo.clazz().isAnnotationPresent(PropertyBean.class)) {
       return;
     }
-    final Field[] fields = klassInfo.clazz().getFields();
+    final Field[] fields = klassInfo.clazz().getDeclaredFields();
     final PropertyBean annotation = klassInfo.clazz().getAnnotation(PropertyBean.class);
     final String prefix = annotation.value();
     for (Field field : fields) {
@@ -68,7 +70,7 @@ public class PropertyBeanInjector implements Injector {
         fieldProperty = environment.getObject(name);
       }
       try {
-        field.set(obj, fieldProperty);
+        field.set(injectContext.getObject(), fieldProperty);
       } catch (IllegalAccessException e) {
         log.error("Injection exception, current field: {} " +
                 "injection {} failed", field.getName(), fieldProperty);

@@ -28,8 +28,10 @@ import org.apex.scheduler.Scheduler;
 
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.Arrays;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.RejectedExecutionException;
@@ -42,10 +44,10 @@ import static java.util.Objects.requireNonNull;
  * @since 2020/9/8
  */
 public class Apex {
-  private final List<Class<? extends Annotation>> withTypeAnnotations = new ArrayList<>();
-  private final List<TypeFilter> typeFilters = new ArrayList<>();
+  private final Set<TypeFilter> typeFilters = new LinkedHashSet<>();
+  private final Set<String> scanPackages = new LinkedHashSet<>();
   private final Environment environment = Environment.create();
-  private final List<String> scanPackages = new ArrayList<>();
+  private final Set<Class<? extends Annotation>> typeAnnotations = new LinkedHashSet<>();
 
   private Scheduler scheduler;
   private Executor executor;
@@ -66,6 +68,7 @@ public class Apex {
 
   /**
    * add type filter
+   *
    * @param typeFilters type filter
    * @return this
    */
@@ -77,6 +80,7 @@ public class Apex {
 
   /**
    * add type filter list
+   *
    * @param typeFilters type filter list
    * @return this
    */
@@ -88,18 +92,20 @@ public class Apex {
 
   /**
    * Get type filter
+   *
    * @return type filter list
    */
-  public List<TypeFilter> typeFilters() {
+  public Set<TypeFilter> typeFilters() {
     return typeFilters;
   }
 
   /**
    * Get with type annotations
+   *
    * @return Annotation list
    */
-  public List<Class<? extends Annotation>> withTypeAnnotations() {
-    return withTypeAnnotations;
+  public Set<Class<? extends Annotation>> typeAnnotations() {
+    return typeAnnotations;
   }
 
   /**
@@ -108,9 +114,9 @@ public class Apex {
    * @param annotatedElements annotations list
    * @return this
    */
-  public Apex withTypeAnnotation(List<Class<? extends Annotation>> annotatedElements) {
+  public Apex typeAnnotation(List<Class<? extends Annotation>> annotatedElements) {
     Validate.notNull(annotatedElements, "annotatedElements can't be null");
-    this.withTypeAnnotations.addAll(annotatedElements);
+    this.typeAnnotations.addAll(annotatedElements);
     return this;
   }
 
@@ -121,9 +127,9 @@ public class Apex {
    * @return this
    */
   @SafeVarargs
-  public final Apex withTypeAnnotation(Class<? extends Annotation>... annotations) {
+  public final Apex typeAnnotation(Class<? extends Annotation>... annotations) {
     Validate.notNull(annotations, "annotations can't be null");
-    Collections.addAll(this.withTypeAnnotations, annotations);
+    this.typeAnnotation(new ArrayList<>(Arrays.asList(annotations)));
     return this;
   }
 
@@ -202,9 +208,10 @@ public class Apex {
 
   /**
    * Get scan package
+   *
    * @return scan packages
    */
-  public List<String> packages() {
+  public Set<String> packages() {
     return scanPackages;
   }
 
@@ -217,9 +224,10 @@ public class Apex {
 
   /**
    * Get main method args
+   *
    * @return main method args
    */
-  public String[] mainArgs(){
+  public String[] mainArgs() {
     return args;
   }
 

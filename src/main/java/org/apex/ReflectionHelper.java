@@ -34,7 +34,8 @@ import java.lang.reflect.Modifier;
  * @since 2020/7/24
  */
 public class ReflectionHelper {
-  private ReflectionHelper() {}
+  private ReflectionHelper() {
+  }
 
   /**
    * Create a object with default constructor

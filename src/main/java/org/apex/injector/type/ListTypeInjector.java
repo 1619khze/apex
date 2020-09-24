@@ -36,6 +36,7 @@ import java.util.TreeMap;
  * @since 2020/8/11
  */
 public class ListTypeInjector implements TypeInjector {
+
   @Override
   public Type getType() {
     return List.class;

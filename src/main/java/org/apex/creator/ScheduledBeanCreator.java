@@ -24,8 +24,8 @@
 package org.apex.creator;
 
 import org.apex.BeanCreator;
+import org.apex.KlassInfo;
 import org.apex.annotation.Singleton;
-import org.apex.beans.KlassInfo;
 
 /**
  * @author WangYi
