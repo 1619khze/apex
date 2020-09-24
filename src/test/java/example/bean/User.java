@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2019 1619kHz
+ * Copyright (c) 2020 1619kHz
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,9 +25,8 @@ package example.bean;
 
 import example.config.ConfigProperty;
 import org.apex.annotation.Value;
-
-import javax.inject.Inject;
-import javax.inject.Singleton;
+import org.apex.annotation.Inject;
+import org.apex.annotation.Singleton;
 
 /**
  * @author WangYi

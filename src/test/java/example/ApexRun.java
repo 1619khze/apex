@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2019 1619kHz
+ * Copyright (c) 2020 1619kHz
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -24,13 +24,12 @@
 package example;
 
 import example.bean.User;
-import example.bean.User4;
 import org.apex.Apex;
 import org.apex.ApexContext;
-import org.apex.BeanDefinition;
-
-import java.util.List;
-import java.util.Map;
+import org.apex.annotation.ConfigBean;
+import org.apex.annotation.PropertyBean;
+import org.apex.annotation.Scheduled;
+import org.apex.annotation.Singleton;
 
 /**
  * @author WangYi
@@ -38,30 +37,15 @@ import java.util.Map;
  */
 public class ApexRun {
   public static void main(String[] args) throws Exception {
-    Map<String, BeanDefinition> example = Apex.of().mainArgs(args).packages("example").load();
-    ApexContext apexContext = ApexContext.of();
-    apexContext.registerBeanDefinitions(example);
+    Apex apex = Apex.of();
+    apex.packages().add("example");
+    apex.mainArgs(args);
 
-    User4 user4 = apexContext.addBean(User4.class);
-    System.out.println(user4);
+    apex.typeAnnotation(ConfigBean.class, PropertyBean.class, Singleton.class, Scheduled.class);
+    ApexContext apeContext = new ApexContext();
+    apeContext.init(apex);
 
-    User beanByName = apexContext.getBean(User.class.getName());
-    beanByName.user();
-
-    User beanByClass = apexContext.getBean(beanByName.getClass());
-    beanByClass.user();
-
-    User beanByObject = apexContext.getBean(beanByClass);
-    beanByObject.user();
-
-    List<User> userList = apexContext.getBeanByType(User.class);
-    userList.forEach(User::user);
-
-    List<Object> beanByType = apexContext.getBeanByType(beanByObject);
-    beanByType.forEach(obj -> {
-      User user = (User) obj;
-      user.user();
-    });
-
+    User bean = apeContext.getBean(User.class);
+    bean.user();
   }
 }

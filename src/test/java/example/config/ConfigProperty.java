@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2019 1619kHz
+ * Copyright (c) 2020 1619kHz
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -23,9 +23,9 @@
  */
 package example.config;
 
-import org.apex.annotation.ConfigurationProperty;
+import org.apex.annotation.PropertyBean;
+import org.apex.annotation.Singleton;
 
-import javax.inject.Singleton;
 import java.util.List;
 import java.util.Map;
 
@@ -34,7 +34,7 @@ import java.util.Map;
  * @since 2020/8/4
  */
 @Singleton
-@ConfigurationProperty(value = "config.test")
+@PropertyBean(value = "config.test")
 public class ConfigProperty {
   private List<String> list;
   private Map<String, Object> map;

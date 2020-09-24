@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2019 1619kHz
+ * Copyright (c) 2020 1619kHz
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -21,19 +21,32 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package example.filter;
+package org.apex;
 
-import example.bean.User;
-import org.apex.loader.TypeFilter;
+import org.junit.Test;
+
+import java.util.Map;
 
 /**
  * @author WangYi
- * @since 2020/8/11
+ * @since 2020/9/22
  */
-public class UserFilter implements TypeFilter {
+public class EnvironmentTest {
 
-  @Override
-  public boolean filter(Class<?> cls) {
-    return !cls.getTypeName().equals(User.class.getName());
+  @Test
+  public void testApexConfig() {
+    String[] arg = new String[]{"testArgs:aa"};
+    Environment environment = Environment.create();
+    environment.mainArgs(arg);
+    try {
+      environment.init();
+      Map<String, Object> stringObjectMap = environment.toMap();
+      for (Map.Entry<String, Object> entry : stringObjectMap.entrySet()) {
+        System.out.println(entry.getKey());
+        System.out.println(entry.getValue());
+      }
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
   }
 }
