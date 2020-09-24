@@ -24,6 +24,7 @@
 package org.apex;
 
 import org.apex.io.FileBaseResource;
+import org.apex.io.Resource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

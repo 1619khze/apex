@@ -60,6 +60,9 @@ public class Discoverer {
       final ClassInfoList classesWithAnnotation =
               scanResult.getClassesWithAnnotation(annotation.getName());
       for (ClassInfo classInfo : classesWithAnnotation) {
+        if (!ReflectionHelper.isNormal(classInfo.loadClass())) {
+          continue;
+        }
         Class<?> aClass = classInfo.loadClass();
         if (apex.typeFilters().isEmpty()) {
           result.put(ReflectionHelper.newInstance(aClass), aClass);

@@ -44,13 +44,13 @@ public abstract class AbstractFactory implements ApexFactory {
   protected final Map<String, Object> instanceMap = new ConcurrentHashMap<>();
   protected final ServiceLoader<Injector> injectors = ServiceLoader.load(Injector.class);
   private final Logger log = LoggerFactory.getLogger(AbstractFactory.class);
-  private final Map<String, Object> injectedMap = new ConcurrentHashMap<>();
+
+  public Map<String, Object> getInstanceMap() {
+    return instanceMap;
+  }
 
   protected <T> T getInjectBean(Class<T> cls) {
     requireNonNull(cls, "cls must not be null");
-    if (injectedMap.containsKey(cls.getName())) {
-      return (T) injectedMap.get(cls.getName());
-    }
 
     Object o = instanceMap.get(cls.getName());
     return getInjectBean(cls.isAssignableFrom(o.getClass()) ? cls.cast(o) : o);
@@ -64,7 +64,6 @@ public abstract class AbstractFactory implements ApexFactory {
                 klassInfoMap.getOrDefault(obj.getClass().getName(),
                         KlassInfo.create(obj)), instanceMap));
       }
-      this.injectedMap.put(obj.getClass().getName(), obj);
       return (T) obj;
     } catch (Exception e) {
       throw new BeanInstantiationException("obj can't be injected");

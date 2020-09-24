@@ -23,8 +23,6 @@
  */
 package org.apex.io;
 
-import org.apex.Resource;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
