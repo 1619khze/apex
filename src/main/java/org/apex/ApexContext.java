@@ -50,9 +50,6 @@ public class ApexContext extends AbstractFactory {
     environment.mainArgs(apex.mainArgs());
     environment.init();
 
-    log.info("Reflections initialization completed");
-    log.info("Environment initialization completed");
-
     Map<Object, Class<?>> discover = Discoverer.discover(apex);
     for (Map.Entry<Object, Class<?>> entry : discover.entrySet()) {
       Object key = entry.getKey();
