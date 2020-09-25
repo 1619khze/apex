@@ -41,9 +41,7 @@ public class KlassInfo implements Serializable {
   }
 
   private KlassInfo(String name, Object target) {
-    this.name = name;
-    this.clazz = target.getClass();
-    this.target = target;
+    this(name,target.getClass(),target);
   }
 
   private KlassInfo(Class<?> clazz, Object target) {
