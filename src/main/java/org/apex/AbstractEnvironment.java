@@ -23,8 +23,8 @@
  */
 package org.apex;
 
-import org.apex.io.FileBaseResource;
-import org.apex.io.Resource;
+import org.apex.resource.FileBaseResource;
+import org.apex.resource.Resource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
