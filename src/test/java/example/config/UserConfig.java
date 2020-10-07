@@ -26,6 +26,7 @@ package example.config;
 import example.bean.User3;
 import org.apex.annotation.Bean;
 import org.apex.annotation.ConfigBean;
+import org.apex.annotation.Inject;
 
 /**
  * @author WangYi
@@ -34,11 +35,19 @@ import org.apex.annotation.ConfigBean;
 @ConfigBean
 public class UserConfig {
 
+  @Inject
+  private ConfigProperty configProperty;
+
   @Bean
   public User3 user3() {
     User3 user = new User3();
     user.setPassword("111");
     user.setUsername("admin");
+    user.setAge(configProperty.getAge());
+    user.setExt(configProperty.getAge());
+    user.setHeight(configProperty.getHeight());
+    user.setWeight(configProperty.getWeight());
+    user.setName(configProperty.getName());
     return user;
   }
 
@@ -47,6 +56,11 @@ public class UserConfig {
     User3 user = new User3();
     user.setPassword("111");
     user.setUsername("admin");
+    user.setAge(configProperty.getAge());
+    user.setExt(configProperty.getAge());
+    user.setHeight(configProperty.getHeight());
+    user.setWeight(configProperty.getWeight());
+    user.setName(configProperty.getName());
     return user;
   }
 }

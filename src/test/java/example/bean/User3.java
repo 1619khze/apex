@@ -31,31 +31,77 @@ public class User3 {
   private String username;
   private String password;
   private String ext;
+  private String age;
+  private String name;
+  private String height;
+  private String weight;
 
   public String getUsername() {
     return username;
   }
 
-  public User3 setUsername(String username) {
+  public void setUsername(String username) {
     this.username = username;
-    return this;
   }
 
   public String getPassword() {
     return password;
   }
 
-  public User3 setPassword(String password) {
+  public void setPassword(String password) {
     this.password = password;
-    return this;
   }
 
   public String getExt() {
     return ext;
   }
 
-  public User3 setExt(String ext) {
+  public void setExt(String ext) {
     this.ext = ext;
-    return this;
+  }
+
+  public String getAge() {
+    return age;
+  }
+
+  public void setAge(String age) {
+    this.age = age;
+  }
+
+  public String getName() {
+    return name;
+  }
+
+  public void setName(String name) {
+    this.name = name;
+  }
+
+  public String getHeight() {
+    return height;
+  }
+
+  public void setHeight(String height) {
+    this.height = height;
+  }
+
+  public String getWeight() {
+    return weight;
+  }
+
+  public void setWeight(String weight) {
+    this.weight = weight;
+  }
+
+  @Override
+  public String toString() {
+    return "User3{" +
+            "username='" + username + '\'' +
+            ", password='" + password + '\'' +
+            ", ext='" + ext + '\'' +
+            ", age='" + age + '\'' +
+            ", name='" + name + '\'' +
+            ", height='" + height + '\'' +
+            ", weight='" + weight + '\'' +
+            '}';
   }
 }

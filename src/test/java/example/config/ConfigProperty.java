@@ -38,11 +38,34 @@ import java.util.Map;
 public class ConfigProperty {
   private List<String> list;
   private Map<String, Object> map;
-
   private String age;
   private String name;
   private String height;
   private String weight;
+
+  public List<String> getList() {
+    return list;
+  }
+
+  public Map<String, Object> getMap() {
+    return map;
+  }
+
+  public String getAge() {
+    return age;
+  }
+
+  public String getName() {
+    return name;
+  }
+
+  public String getHeight() {
+    return height;
+  }
+
+  public String getWeight() {
+    return weight;
+  }
 
   @Override
   public String toString() {
