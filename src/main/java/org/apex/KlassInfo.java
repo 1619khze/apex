@@ -33,21 +33,21 @@ public class KlassInfo implements Serializable {
   private final String name;
   private final Class<?> clazz;
   private final Object target;
+  private final boolean initialized;
 
   private KlassInfo(String name, Class<?> clazz, Object target) {
     this.name = name;
     this.clazz = clazz;
     this.target = target;
+    this.initialized = true;
   }
 
   private KlassInfo(String name, Object target) {
-    this(name,target.getClass(),target);
+    this(name, target.getClass(), target);
   }
 
   private KlassInfo(Class<?> clazz, Object target) {
-    this.name = clazz.getName();
-    this.clazz = clazz;
-    this.target = target;
+    this(clazz.getName(), clazz, target);
   }
 
   public KlassInfo(Object target) {
@@ -80,5 +80,15 @@ public class KlassInfo implements Serializable {
 
   public String name() {
     return name;
+  }
+
+  @Override
+  public String toString() {
+    return "KlassInfo{" +
+            "name='" + name + '\'' +
+            ", clazz=" + clazz +
+            ", target=" + target +
+            ", initialized=" + initialized +
+            '}';
   }
 }
