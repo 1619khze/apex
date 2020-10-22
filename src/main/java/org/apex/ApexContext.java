@@ -54,12 +54,8 @@ public class ApexContext extends AbstractFactory {
     for (Map.Entry<Object, Class<?>> entry : discover.entrySet()) {
       Object key = entry.getKey();
       Class<?> value = entry.getValue();
-      if (!value.isAnnotationPresent(ConfigBean.class)) {
-        klassInfoMap.put(value.getName(), KlassInfo.create(key));
-        instanceMap.put(value.getName(), key);
-      } else {
-        this.registerConfigBean(key, value);
-      }
+      this.klassInfoMap.put(value.getName(), KlassInfo.create(key));
+      this.instanceMap.put(value.getName(), key);
     }
     for (Map.Entry<String, KlassInfo> entry : klassInfoMap.entrySet()) {
       this.instanceMap.put(entry.getKey(), entry.getValue().target());
@@ -73,6 +69,12 @@ public class ApexContext extends AbstractFactory {
       InjectContext injectContext = InjectContext.create(def, instanceMap);
       for (final Injector next : injectors) {
         next.inject(injectContext);
+      }
+    }
+
+    for (Map.Entry<String, Object> entry : instanceMap.entrySet()) {
+      if (entry.getValue().getClass().isAnnotationPresent(ConfigBean.class)) {
+        registerConfigBean(entry.getValue(),entry.getValue().getClass());
       }
     }
   }
