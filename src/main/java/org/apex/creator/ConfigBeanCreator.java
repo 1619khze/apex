@@ -40,7 +40,7 @@ import java.util.List;
 public class ConfigBeanCreator {
 
   public boolean support(Class<?> cls) {
-    return cls.isAnnotationPresent(ConfigBean.class) && ObjectUtils.isNotEmpty(cls.getDeclaredFields());
+    return cls.isAnnotationPresent(ConfigBean.class) && ObjectUtils.isNotEmpty(cls.getDeclaredMethods());
   }
 
   public KlassInfo create(InjectContext injectContext, Method method) throws Exception {
