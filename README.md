@@ -37,7 +37,7 @@ mvn clean install
 
 ```java
 final Apex apex = Apex.of();
-final String scanPath = aquiver.bootCls().getPackage().getName();
+final String scanPath = "org.example";
 final List<Class<? extends Annotation>> typeAnnotations = new ArrayList<>();
 
 //添加需要自动扫描的注解
@@ -50,11 +50,14 @@ typeAnnotations.add(ConfigBean.class);
 typeAnnotations.add(PropertyBean.class);
 typeAnnotations.add(Scheduled.class);
 apex.typeAnnotation(typeAnnotations);
+
 //添加扫描路径
 apex.packages().add(scanPath);
 apex.mainArgs(aquiver.mainArgs());
+
 //通过instance方法获取ApexContext对象
 ApexContext apexContext = ApexContext.instance();
+
 //初始化
 apexContext.init(apex);
 ```
