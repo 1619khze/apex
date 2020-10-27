@@ -42,7 +42,7 @@ public class ApexRun {
     apex.mainArgs(args);
 
     apex.typeAnnotation(ConfigBean.class, PropertyBean.class, Singleton.class, Scheduled.class);
-    ApexContext apeContext = new ApexContext();
+    ApexContext apeContext = ApexContext.instance();
     apeContext.init(apex);
 
     User bean = apeContext.getBean(User.class);
