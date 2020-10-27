@@ -25,8 +25,6 @@ package org.apex;
 
 import org.apex.annotation.ConfigBean;
 import org.apex.creator.ConfigBeanCreator;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Method;
 import java.util.Map;
@@ -37,8 +35,9 @@ import java.util.Objects;
  * @since 2020/6/22
  */
 public class ApexContext extends AbstractFactory {
-  private final Logger log = LoggerFactory.getLogger(ApexContext.class);
   private final ConfigBeanCreator configBeanCreator = new ConfigBeanCreator();
+
+  public ApexContext() {}
 
   public static ApexContext instance() {
     return ApexContextHolder.instance;
