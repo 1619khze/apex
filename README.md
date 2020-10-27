@@ -1,6 +1,6 @@
 # Apex
 
-<p align="left">A fully functional and simple dependency injection framework</p>
+<p align="left">Apex是一个简单的依赖注入库</p>
 <p align="left">
    <img src="https://img.shields.io/badge/JDK-8+-green.svg" alt="Build Status">
    <img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="Build Status">
@@ -11,15 +11,9 @@
  </a>
  </p>
 
-## Contents
+## 安装
 
-- [Install](#install)
-- [Usage](#usage)
-- [License](#license)
-
-## Install
-
-Create a basic `Maven` or `Gradle` project.
+通过 `Maven` 或 `Gradle` 创建一个项目，因为还未上传到Maven中心仓库，所以目前暂时通过clone代码进行安装
 
 ```git
 git clone https://github.com/AquiverV/apex.git
@@ -29,31 +23,40 @@ cd apex
 mvn clean install
 ```
 
-Run with `Maven`:
+通过 `Maven` 安装:
 
 ```xml
 <dependency>
     <groupId>org.apex</groupId>
     <artifactId>apex</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <version>1.0</version>
 </dependency>
 ```
 
-## Usage
+## 使用方式
 
 ```java
 final Apex apex = Apex.of();
 final String scanPath = aquiver.bootCls().getPackage().getName();
-final ClassgraphOptions classgraphOptions = ClassgraphOptions.builder()
-        .verbose(false).realtimeLogging(false)
-        .scanPackages(scanPath).build();
+final List<Class<? extends Annotation>> typeAnnotations = new ArrayList<>();
 
-final Scanner scanner = new ClassgraphScanner(classgraphOptions);
-final ApexContext apexContext = apex.addScanAnnotation(extendAnnotation())
-        .options(classgraphOptions).scanner(scanner).packages(scanPath)
-        .apexContext();
-
-User beanByName = apexContext.getBean(User.class.getName());
+//添加需要自动扫描的注解
+typeAnnotations.add(Path.class);
+typeAnnotations.add(RouteAdvice.class);
+typeAnnotations.add(RestPath.class);
+typeAnnotations.add(WebSocket.class);
+typeAnnotations.add(Singleton.class);
+typeAnnotations.add(ConfigBean.class);
+typeAnnotations.add(PropertyBean.class);
+typeAnnotations.add(Scheduled.class);
+apex.typeAnnotation(typeAnnotations);
+//添加扫描路径
+apex.packages().add(scanPath);
+apex.mainArgs(aquiver.mainArgs());
+//通过instance方法获取ApexContext对象
+ApexContext apexContext = ApexContext.instance();
+//初始化
+apexContext.init(apex);
 ```
 
 ## License
