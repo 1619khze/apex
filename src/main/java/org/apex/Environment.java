@@ -42,8 +42,7 @@ import java.util.Set;
 public class Environment extends AbstractEnvironment {
   private static final Logger log = LoggerFactory.getLogger(Environment.class);
 
-  private Environment() {
-  }
+  private Environment() {}
 
   private Environment(Properties properties) {
     this.properties.putAll(toMap(properties));
@@ -101,8 +100,9 @@ public class Environment extends AbstractEnvironment {
     final Object o = this.properties.get(name);
     if (o == null) {
       return defaultValue;
+    } else {
+      return Boolean.parseBoolean(o.toString());
     }
-    return Boolean.parseBoolean(o.toString());
   }
 
   public String getString(String name, String defaultValue) {
@@ -117,8 +117,9 @@ public class Environment extends AbstractEnvironment {
     final Object o = this.properties.get(name);
     if (o == null) {
       return defaultValue;
+    } else {
+      return Integer.parseInt(o.toString());
     }
-    return Integer.parseInt(o.toString());
   }
 
   public int size() {
