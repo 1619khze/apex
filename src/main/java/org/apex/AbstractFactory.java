@@ -23,6 +23,7 @@
  */
 package org.apex;
 
+import org.apache.commons.lang3.Validate;
 import org.apex.exception.BeanInstantiationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,31 +34,29 @@ import java.util.Map;
 import java.util.ServiceLoader;
 import java.util.concurrent.ConcurrentHashMap;
 
-import static java.util.Objects.requireNonNull;
-
 /**
  * @author WangYi
  * @since 2020/6/22
  */
 public abstract class AbstractFactory implements ApexFactory {
+  private static final Logger log = LoggerFactory.getLogger(AbstractFactory.class);
+
   protected final Map<String, KlassInfo> klassInfoMap = new ConcurrentHashMap<>(64);
   protected final Map<String, Object> instanceMap = new ConcurrentHashMap<>();
   protected final ServiceLoader<Injector> injectors = ServiceLoader.load(Injector.class);
-  private final Logger log = LoggerFactory.getLogger(AbstractFactory.class);
 
-  public Map<String, Object> getInstanceMap() {
+  public Map<String, Object> instances() {
     return instanceMap;
   }
 
   protected <T> T getInjectBean(Class<T> cls) {
-    requireNonNull(cls, "cls must not be null");
-
-    Object o = instanceMap.get(cls.getName());
-    return getInjectBean(cls.isAssignableFrom(o.getClass()) ? cls.cast(o) : o);
+    Validate.notNull(cls, "cls must not be null");
+    Object obj = instanceMap.get(cls.getName());
+    return getInjectBean(cls.isAssignableFrom(obj.getClass()) ? cls.cast(obj) : obj);
   }
 
   protected <T> T getInjectBean(Object obj) {
-    requireNonNull(obj, "obj must not be null");
+    Validate.notNull(obj, "obj must not be null");
     try {
       for (final Injector next : injectors) {
         next.inject(InjectContext.create(
@@ -72,28 +71,29 @@ public abstract class AbstractFactory implements ApexFactory {
 
   @Override
   public <T> T getBean(Class<T> cls) {
-    requireNonNull(cls, "cls must not be null");
+    Validate.notNull(cls, "cls must not be null");
     if (instanceMap.containsKey(cls.getName())) {
       return this.getInjectBean(cls);
+    } else {
+      return null;
     }
-    return null;
   }
 
   @Override
   public <T> T getBean(String beanName) {
-    requireNonNull(beanName, "beanName must not be null");
+    Validate.notNull(beanName, "beanName must not be null");
     return getBean(instanceMap.get(beanName));
   }
 
   @Override
   public <T> T getBean(Object obj) {
-    requireNonNull(obj, "obj must not be null");
+    Validate.notNull(obj, "obj must not be null");
     return ((T) getBean(obj.getClass()));
   }
 
   @Override
   public <T> T addBean(Class<T> cls) {
-    requireNonNull(cls, "cls must not be null");
+    Validate.notNull(cls, "cls must not be null");
     final T ref = ReflectionHelper.newInstance(cls);
     this.instanceMap.put(cls.getName(), ref);
     return getBean(cls);
@@ -101,25 +101,25 @@ public abstract class AbstractFactory implements ApexFactory {
 
   @Override
   public <T> T addBean(String beanName) {
-    requireNonNull(beanName, "beanName must not be null");
+    Validate.notNull(beanName, "beanName must not be null");
     try {
       return addBean((Class<T>) Class.forName(beanName));
     } catch (ClassNotFoundException e) {
       log.error("An exception occurred while creating an instance via reflection", e);
+      return null;
     }
-    return null;
   }
 
   @Override
   public <T> T addBean(Object obj) {
-    requireNonNull(obj, "obj must not be null");
+    Validate.notNull(obj, "obj must not be null");
     this.instanceMap.put(obj.getClass().getName(), obj);
     return getBean(obj);
   }
 
   @Override
   public <T> List<T> getBeanByType(Class<T> cls) {
-    requireNonNull(cls, "cls must not be null");
+    Validate.notNull(cls, "cls must not be null");
     List<T> refs = new ArrayList<>();
     if (instanceMap.isEmpty()) {
       return refs;
@@ -135,7 +135,7 @@ public abstract class AbstractFactory implements ApexFactory {
 
   @Override
   public <T> List<T> getBeanByType(Object obj) {
-    requireNonNull(obj, "obj must not be null");
+    Validate.notNull(obj, "obj must not be null");
     Class<T> ref = (Class<T>) obj.getClass();
     return getBeanByType(ref);
   }
