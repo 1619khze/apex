@@ -50,14 +50,14 @@ public class ConfigBeanCreator {
     List<Object> invokeParam = new ArrayList<>();
     Class<?>[] parameterTypes = method.getParameterTypes();
     for (Class<?> parameterType : parameterTypes) {
-      Object o = injectContext.getInstanceMap().get(parameterType.getName());
+      Object o = injectContext.instances().get(parameterType.getName());
       invokeParam.add(o);
     }
     Object invoke;
     if (method.getParameterCount() == 0) {
-      invoke = method.invoke(injectContext.getObject());
+      invoke = method.invoke(injectContext.object());
     } else {
-      invoke = method.invoke(injectContext.getObject(), invokeParam);
+      invoke = method.invoke(injectContext.object(), invokeParam);
     }
     return KlassInfo.create(invoke);
   }

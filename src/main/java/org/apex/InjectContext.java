@@ -44,15 +44,15 @@ public class InjectContext {
     return new InjectContext(klassInfo, instanceMap);
   }
 
-  public Object getObject() {
+  public Object object() {
     return object;
   }
 
-  public KlassInfo getKlassInfo() {
+  public KlassInfo klassInfo() {
     return klassInfo;
   }
 
-  public Map<String, Object> getInstanceMap() {
+  public Map<String, Object> instances() {
     return instanceMap;
   }
 }
