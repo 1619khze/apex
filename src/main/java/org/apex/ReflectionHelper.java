@@ -34,8 +34,7 @@ import java.lang.reflect.Modifier;
  * @since 2020/7/24
  */
 public class ReflectionHelper {
-  private ReflectionHelper() {
-  }
+  private ReflectionHelper() {}
 
   /**
    * Create a object with default constructor
@@ -73,6 +72,6 @@ public class ReflectionHelper {
   }
 
   public static <T> boolean isNormal(Class<T> clazz) {
-    return !isAbstract(clazz) && !isInterface(clazz) && !isEnum(clazz);
+    return !isAbstract(clazz) && !isEnum(clazz);
   }
 }
