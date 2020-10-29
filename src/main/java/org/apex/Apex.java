@@ -44,10 +44,11 @@ import static java.util.Objects.requireNonNull;
  * @since 2020/9/8
  */
 public class Apex {
+  private final Set<Class<? extends Annotation>> typeAnnotations = new LinkedHashSet<>();
   private final Set<TypeFilter> typeFilters = new LinkedHashSet<>();
   private final Set<String> scanPackages = new LinkedHashSet<>();
   private final Environment environment = Environment.create();
-  private final Set<Class<? extends Annotation>> typeAnnotations = new LinkedHashSet<>();
+  private final Set<Class<?>> implInterfaces = new LinkedHashSet<>();
 
   private Scheduler scheduler;
   private Executor executor;
@@ -64,6 +65,39 @@ public class Apex {
    */
   public Environment environment() {
     return environment;
+  }
+
+  /**
+   * add impl interface
+   *
+   * @param type impl interface
+   * @return this
+   */
+  public Apex implInterface(Class<?> type) {
+    Validate.notNull(type, "class type can't be null");
+    this.implInterfaces.add(type);
+    return this;
+  }
+
+  /**
+   * add impl interface
+   *
+   * @param type impl interface
+   * @return this
+   */
+  public Apex implInterfaces(List<Class<?>> types) {
+    Validate.notNull(types, "class type list can't be null and empty");
+    this.implInterfaces.addAll(types);
+    return this;
+  }
+
+  /**
+   * get impl interface list
+   *
+   * @return impl interface list
+   */
+  public Set<Class<?>> implInterfaces() {
+    return this.implInterfaces;
   }
 
   /**
