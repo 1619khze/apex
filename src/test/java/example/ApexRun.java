@@ -26,6 +26,8 @@ package example;
 import example.bean.User;
 import org.apex.Apex;
 import org.apex.ApexContext;
+import org.apex.Injector;
+import org.apex.TypeInjector;
 import org.apex.annotation.ConfigBean;
 import org.apex.annotation.PropertyBean;
 import org.apex.annotation.Scheduled;
@@ -41,7 +43,14 @@ public class ApexRun {
     apex.packages().add("example");
     apex.mainArgs(args);
 
-    apex.typeAnnotation(ConfigBean.class, PropertyBean.class, Singleton.class, Scheduled.class);
+    apex.typeAnnotation(ConfigBean.class);
+    apex.typeAnnotation(PropertyBean.class);
+    apex.typeAnnotation(Singleton.class);
+    apex.typeAnnotation(Scheduled.class);
+
+    apex.implInterface(Injector.class);
+    apex.implInterface(TypeInjector.class);
+
     ApexContext apeContext = ApexContext.instance();
     apeContext.init(apex);
 

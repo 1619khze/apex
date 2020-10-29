@@ -24,6 +24,7 @@
 package example.bean;
 
 import example.config.ConfigProperty;
+import example.service.UserService;
 import org.apex.annotation.Value;
 import org.apex.annotation.Inject;
 import org.apex.annotation.Singleton;
@@ -46,6 +47,9 @@ public class User {
 
   @Inject
   private ConfigProperty configProperty;
+
+  @Inject
+  private UserService userService;
 
   private String username;
   private String password;
@@ -72,6 +76,7 @@ public class User {
     String aa = user2.getAa();
     String username = user3.getUsername();
     String password = user3.getPassword();
+    userService.say();
 
     System.out.println(aa);
     System.out.println(username);
