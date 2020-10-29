@@ -23,32 +23,11 @@
  */
 package org.apex;
 
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.Objects;
-
 public interface Const {
   String BLANK = "";
-
   String PATH_SERVER_PROFILE = "server.profile";
   String PATH_SERVER_BOOT_CONFIG = "server.boot.conf";
-
-  String ENV_NAME = "default";
-  String SERVER_THREAD_NAME = "（'-'*) run ✧";
-  String SINGLE_EXECUTOR_NAME = "@Apex-SingleExecutor";
-
-  // app setting
-  String PATH_APP_BANNER_TEXT = "app.banner.text";
-  String PATH_APP_BANNER_FONT = "app.banner.font";
-  String PATH_APP_THREAD_NAME = "app.thread.name";
-
-  // full property file name
   String PATH_CONFIG_PROPERTIES = "application.properties";
   String PATH_CONFIG_YAML = "application.yml";
-
-  // setting prefix
   String PATH_PREFIX_ROOT = "PATH_PREFIX";
-
-  // watch env
-  Path SERVER_WATCHER_PATH = Paths.get(Objects.requireNonNull(PropertyHelper.getCurrentClassPath()));
 }
