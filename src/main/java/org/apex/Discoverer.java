@@ -50,10 +50,18 @@ public class Discoverer {
     ClassInfoList allClasses = scanResult.getAllClasses();
     allClasses.filter(classInfo -> ReflectionHelper.isNormal(classInfo.loadClass()));
 
-    for (ClassInfo allClass : allClasses) {
-      if (allClass.implementsInterface(TypeFilter.class.getName())) {
-        Object typeFilter = ReflectionHelper.newInstance(allClass.loadClass());
+    for (ClassInfo classInfo : allClasses) {
+      if (classInfo.implementsInterface(TypeFilter.class.getName())) {
+        Object typeFilter = ReflectionHelper.newInstance(classInfo.loadClass());
         apex.typeFilters().add((TypeFilter) typeFilter);
+      }
+
+      Set<Class<?>> implInterfaces = apex.implInterfaces();
+      for (Class<?> implInterface : implInterfaces) {
+        if (classInfo.implementsInterface(implInterface.getName())) {
+          Class<?> loadClass = classInfo.loadClass();
+          result.put(ReflectionHelper.newInstance(loadClass), loadClass);
+        }
       }
     }
     for (Class<? extends Annotation> annotation : annotations) {
