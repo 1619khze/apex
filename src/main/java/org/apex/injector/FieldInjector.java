@@ -27,10 +27,15 @@ import org.apex.InjectContext;
 import org.apex.Injector;
 import org.apex.annotation.Inject;
 import org.apex.annotation.Named;
+import org.apex.annotation.Qualifier;
+import org.apex.exception.QualifierNotUniqueException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 /**
@@ -42,7 +47,7 @@ public class FieldInjector implements Injector {
 
   @Override
   public void inject(InjectContext injectContext) throws Exception {
-    Field[] fields = injectContext.getKlassInfo().clazz().getDeclaredFields();
+    Field[] fields = injectContext.klassInfo().clazz().getDeclaredFields();
     for (Field field : fields) {
       if (!field.isAnnotationPresent(Inject.class)) {
         continue;
@@ -58,7 +63,31 @@ public class FieldInjector implements Injector {
       }
       field.setAccessible(true);
       try {
-        field.set(injectContext.getObject(), injectContext.getInstanceMap().get(id));
+        if (!field.getType().isInterface()) {
+          field.set(injectContext.object(), injectContext.instances().get(id));
+        } else {
+          Object injectObj = injectContext.instances().get(id);
+          if (Objects.isNull(injectObj)) {
+            final List<Object> refs = new ArrayList<>();
+            for (Map.Entry<String, Object> entry : injectContext.instances().entrySet()) {
+              Object value = entry.getValue();
+              if (field.getType().isAssignableFrom(value.getClass())) {
+                refs.add(value);
+              }
+            }
+            if (refs.size() > 1) {
+              if (!field.isAnnotationPresent(Qualifier.class)) {
+                throw new QualifierNotUniqueException("Qualifier are not unique " + field.getName());
+              } else {
+                final Qualifier qualifier = field.getAnnotation(Qualifier.class);
+                injectObj = injectContext.instances().get(qualifier.value());
+              }
+            } else {
+              injectObj = refs.get(0);
+            }
+          }
+          field.set(injectContext.object(), injectObj);
+        }
       } catch (IllegalAccessException e) {
         log.error("An exception occurred while injecting field");
         throw e;

@@ -48,7 +48,7 @@ public class PropertyBeanInjector implements Injector {
 
   @Override
   public void inject(InjectContext injectContext) throws Exception {
-    KlassInfo klassInfo = injectContext.getKlassInfo();
+    KlassInfo klassInfo = injectContext.klassInfo();
     if (!klassInfo.clazz().isAnnotationPresent(PropertyBean.class)) {
       return;
     }
@@ -70,7 +70,7 @@ public class PropertyBeanInjector implements Injector {
         fieldProperty = environment.getObject(name);
       }
       try {
-        field.set(injectContext.getObject(), fieldProperty);
+        field.set(injectContext.object(), fieldProperty);
       } catch (IllegalAccessException e) {
         log.error("Injection exception, current field: {} " +
                 "injection {} failed", field.getName(), fieldProperty);

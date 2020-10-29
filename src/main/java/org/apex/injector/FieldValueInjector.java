@@ -44,7 +44,7 @@ public class FieldValueInjector implements Injector {
 
   @Override
   public void inject(InjectContext injectContext) throws IllegalAccessException {
-    Field[] fields = injectContext.getKlassInfo().clazz().getDeclaredFields();
+    Field[] fields = injectContext.klassInfo().clazz().getDeclaredFields();
     if (ObjectUtils.isEmpty(fields)) {
       return;
     }
@@ -59,7 +59,7 @@ public class FieldValueInjector implements Injector {
                 .replace("}", "");
         field.setAccessible(true);
         try {
-          field.set(injectContext.getObject(), environment.getString(key, null));
+          field.set(injectContext.object(), environment.getString(key, null));
         } catch (IllegalAccessException e) {
           log.error("An exception occurred while injecting value field");
           throw e;
