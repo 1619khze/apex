@@ -23,8 +23,6 @@
  */
 package org.apex;
 
-import org.apex.exception.BeanInstantiationException;
-
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Modifier;

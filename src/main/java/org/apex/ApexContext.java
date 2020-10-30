@@ -23,10 +23,13 @@
  */
 package org.apex;
 
+import org.apache.commons.lang3.ObjectUtils;
+import org.apex.annotation.Bean;
 import org.apex.annotation.ConfigBean;
-import org.apex.creator.ConfigBeanCreator;
 
 import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
@@ -102,6 +105,31 @@ public class ApexContext extends AbstractFactory {
         klassInfoMap.put(klassInfo.name(), klassInfo);
         instanceMap.put(klassInfo.name(), klassInfo.target());
       }
+    }
+  }
+
+  private static class ConfigBeanCreator {
+    public boolean support(Class<?> cls) {
+      return cls.isAnnotationPresent(ConfigBean.class) && ObjectUtils.isNotEmpty(cls.getDeclaredMethods());
+    }
+
+    public KlassInfo create(InjectContext injectContext, Method method) throws Exception {
+      if (!method.isAnnotationPresent(Bean.class)) {
+        return null;
+      }
+      List<Object> invokeParam = new ArrayList<>();
+      Class<?>[] parameterTypes = method.getParameterTypes();
+      for (Class<?> parameterType : parameterTypes) {
+        Object o = injectContext.instances().get(parameterType.getName());
+        invokeParam.add(o);
+      }
+      Object invoke;
+      if (method.getParameterCount() == 0) {
+        invoke = method.invoke(injectContext.object());
+      } else {
+        invoke = method.invoke(injectContext.object(), invokeParam);
+      }
+      return KlassInfo.create(invoke);
     }
   }
 

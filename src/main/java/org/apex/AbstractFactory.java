@@ -24,7 +24,6 @@
 package org.apex;
 
 import org.apache.commons.lang3.Validate;
-import org.apex.exception.BeanInstantiationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

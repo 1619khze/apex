@@ -21,7 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package org.apex.resource;
+package org.apex.io;
 
 import java.io.File;
 import java.io.FileInputStream;
