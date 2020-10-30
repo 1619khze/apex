@@ -38,8 +38,6 @@ import java.util.Objects;
  * @since 2020/6/22
  */
 public class ApexContext extends AbstractFactory {
-  private final ConfigBeanCreator configBeanCreator = new ConfigBeanCreator();
-
   public ApexContext() {}
 
   public static ApexContext instance() {
@@ -86,7 +84,7 @@ public class ApexContext extends AbstractFactory {
   }
 
   private void registerConfigBean(Object key, Class<?> value) throws Exception {
-    if (!configBeanCreator.support(value)) {
+    if (!support(value)) {
       return;
     }
     if (value.getMethods().length != 0) {
@@ -98,7 +96,7 @@ public class ApexContext extends AbstractFactory {
                   "Bean annotation in the configuration cannot be " +
                   "void:{" + value.getName() + "}" + "#" + method.getName());
         }
-        KlassInfo klassInfo = configBeanCreator.create(injectContext, method);
+        KlassInfo klassInfo = createConfigBean(injectContext, method);
         if (Objects.isNull(klassInfo)) {
           continue;
         }
@@ -108,29 +106,27 @@ public class ApexContext extends AbstractFactory {
     }
   }
 
-  private static class ConfigBeanCreator {
-    public boolean support(Class<?> cls) {
-      return cls.isAnnotationPresent(ConfigBean.class) && ObjectUtils.isNotEmpty(cls.getDeclaredMethods());
-    }
+  private boolean support(Class<?> cls) {
+    return cls.isAnnotationPresent(ConfigBean.class) && ObjectUtils.isNotEmpty(cls.getDeclaredMethods());
+  }
 
-    public KlassInfo create(InjectContext injectContext, Method method) throws Exception {
-      if (!method.isAnnotationPresent(Bean.class)) {
-        return null;
-      }
-      List<Object> invokeParam = new ArrayList<>();
-      Class<?>[] parameterTypes = method.getParameterTypes();
-      for (Class<?> parameterType : parameterTypes) {
-        Object o = injectContext.instances().get(parameterType.getName());
-        invokeParam.add(o);
-      }
-      Object invoke;
-      if (method.getParameterCount() == 0) {
-        invoke = method.invoke(injectContext.object());
-      } else {
-        invoke = method.invoke(injectContext.object(), invokeParam);
-      }
-      return KlassInfo.create(invoke);
+  private KlassInfo createConfigBean(InjectContext injectContext, Method method) throws Exception {
+    if (!method.isAnnotationPresent(Bean.class)) {
+      return null;
     }
+    List<Object> invokeParam = new ArrayList<>();
+    Class<?>[] parameterTypes = method.getParameterTypes();
+    for (Class<?> parameterType : parameterTypes) {
+      Object o = injectContext.instances().get(parameterType.getName());
+      invokeParam.add(o);
+    }
+    Object invoke;
+    if (method.getParameterCount() == 0) {
+      invoke = method.invoke(injectContext.object());
+    } else {
+      invoke = method.invoke(injectContext.object(), invokeParam);
+    }
+    return KlassInfo.create(invoke);
   }
 
   private static class ApexContextHolder {
