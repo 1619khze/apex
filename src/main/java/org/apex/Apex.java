@@ -49,10 +49,15 @@ public class Apex {
   private final Set<String> scanPackages = new LinkedHashSet<>();
   private final Environment environment = Environment.create();
   private final Set<Class<?>> implInterfaces = new LinkedHashSet<>();
+  private final Set<Injector> injectors = new LinkedHashSet<>();
+  private final Set<TypeInjector> typeInjectors = new LinkedHashSet<>();
 
   private Scheduler scheduler;
   private Executor executor;
   private String[] args;
+
+  private Apex() {
+  }
 
   public static Apex of() {
     return ApexHolder.instance;
@@ -65,6 +70,72 @@ public class Apex {
    */
   public Environment environment() {
     return environment;
+  }
+
+  /**
+   * Get injector list
+   *
+   * @return injector list
+   */
+  public Set<Injector> injectors() {
+    return injectors;
+  }
+
+  /**
+   * Get type injector list
+   *
+   * @return type injector list
+   */
+  public Set<TypeInjector> typeInjectors() {
+    return typeInjectors;
+  }
+
+  /**
+   * Add a injector
+   *
+   * @param injector injector
+   * @return this
+   */
+  public Apex injector(Injector injector) {
+    Validate.notNull(injector, "injector can't be null");
+    this.injectors.add(injector);
+    return this;
+  }
+
+  /**
+   * Add a injector list
+   *
+   * @param injector injector list
+   * @return this
+   */
+  public Apex injectors(List<Injector> injectors) {
+    Validate.notNull(injectors, "injectors can't be null");
+    this.injectors.addAll(injectors);
+    return this;
+  }
+
+  /**
+   * Add a typeInjector list
+   *
+   * @param injector typeInjector list
+   * @return this
+   */
+  public Apex typeInjectors(List<TypeInjector> typeInjectors) {
+    Validate.notNull(typeInjectors, "typeInjectors can't be null");
+    this.typeInjectors.addAll(typeInjectors);
+    return this;
+  }
+
+  /**
+   * Add a typeInjector
+   *
+   * @param injector typeInjector
+   * @return this
+   */
+  public Apex typeInjector(TypeInjector typeInjector) {
+    Validate.notNull(typeInjector, "typeInjector can't be null");
+    this.typeInjectors.add(typeInjector);
+    return this;
   }
 
   /**
