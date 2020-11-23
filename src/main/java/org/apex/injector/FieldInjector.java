@@ -28,7 +28,7 @@ import org.apex.Injector;
 import org.apex.annotation.Inject;
 import org.apex.annotation.Named;
 import org.apex.annotation.Qualifier;
-import org.apex.QualifierNotUniqueException;
+import org.apex.exception.QualifierNotUniqueException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
