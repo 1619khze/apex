@@ -21,7 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package org.apex;
+package org.apex.async;
 
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
