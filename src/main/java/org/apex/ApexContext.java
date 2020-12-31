@@ -40,7 +40,7 @@ import java.util.Objects;
 public class ApexContext extends AbstractFactory {
   public ApexContext() {}
 
-  public static ApexContext instance() {
+  public static ApexContext of() {
     return ApexContextHolder.instance;
   }
 
