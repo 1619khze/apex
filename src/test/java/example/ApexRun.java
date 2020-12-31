@@ -51,7 +51,7 @@ public class ApexRun {
     apex.implInterface(Injector.class);
     apex.implInterface(TypeInjector.class);
 
-    ApexContext apeContext = ApexContext.instance();
+    ApexContext apeContext = ApexContext.of();
     apeContext.init(apex);
 
     User bean = apeContext.getBean(User.class);
