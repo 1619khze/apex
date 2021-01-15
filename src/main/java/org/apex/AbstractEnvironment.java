@@ -147,6 +147,9 @@ public abstract class AbstractEnvironment {
       url = this.getClass().getResource(loadPath
               .replace(propsFileSuffix, ymlFileSuffix));
     }
+    if (Objects.isNull(url)) {
+      return;
+    }
     loadPath = url.getPath();
     if (loadPath.endsWith(propsFileSuffix)) {
       loadPropsFile(loadPath);
